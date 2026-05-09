@@ -136,7 +136,7 @@
         <field name="name">llm.tool.search</field>
         <field name="model">llm.tool</field>
         <field name="arch" type="xml">
-            <search string="Search LLM Tools">
+            <search>
                 <field name="name" />
                 <field name="implementation" />
                 <field name="title" />
@@ -160,7 +160,7 @@
           name="requires_consent"
           domain="[('requires_user_consent', '=', True)]"
         />
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter
             string="Implementation"
             name="group_by_implementation"

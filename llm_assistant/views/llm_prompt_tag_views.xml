@@ -33,7 +33,7 @@
         <field name="name">llm.prompt.tag.search</field>
         <field name="model">llm.prompt.tag</field>
         <field name="arch" type="xml">
-            <search string="Search Prompt Tags">
+            <search>
                 <field name="name" />
             </search>
         </field>

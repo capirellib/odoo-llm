@@ -162,7 +162,11 @@ class LLMThread(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Set default title if not provided"""
+        """Set default title if not provided.
+        
+        EN: Ensures each new thread has a name, defaulting to a linked record's name or a unique generic name.
+        ES: Asegura que cada nuevo hilo tenga un nombre, usando por defecto el nombre de un registro vinculado o un nombre genérico único.
+        """
         needs_unique_name = []
 
         for vals in vals_list:
@@ -224,6 +228,11 @@ class LLMThread(models.Model):
         **kwargs,
     ):
         """Override to handle LLM-specific message types and metadata.
+
+        EN: This method extends the standard Odoo message posting to support LLM roles, 
+            JSON bodies for tool calls, and error flagging.
+        ES: Este método extiende la publicación de mensajes estándar de Odoo para admitir 
+            roles de LLM, cuerpos JSON para llamadas a herramientas y marcado de errores.
 
         Args:
             llm_role (str): The LLM role ('user', 'assistant', 'tool', 'system')

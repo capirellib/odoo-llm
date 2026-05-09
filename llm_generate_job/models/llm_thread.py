@@ -138,6 +138,10 @@ class LLMThread(models.Model):
 
         # Determine whether to use queue or direct generation
         # Auto-detect based on model having a queue
+        # EN: Using sudo() to check queue status because the user might not have access
+        # to the queue configuration records, but we need to know if we should use the queue.
+        # ES: Usando sudo() para verificar el estado de la cola porque el usuario podría no tener acceso
+        # a los registros de configuración de la cola, pero necesitamos saber si debemos usar la cola.
         queue = (
             self.env["llm.generation.queue"]
             .sudo()
@@ -192,6 +196,10 @@ class LLMThread(models.Model):
             generation_inputs["attachment_ids"] = last_message.attachment_ids.ids
 
         # Create job record with raw inputs
+        # EN: Using sudo() to create the job because the user might not have create access
+        # to the generation job records, but is authorized to trigger generation via the thread.
+        # ES: Usando sudo() para crear el trabajo porque el usuario podría no tener acceso de creación
+        # a los registros de trabajos de generación, pero está autorizado para activar la generación a través del hilo.
         job = (
             self.env["llm.generation.job"]
             .sudo()

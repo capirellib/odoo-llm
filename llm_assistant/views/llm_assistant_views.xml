@@ -250,7 +250,7 @@
         <field name="name">llm.assistant.search</field>
         <field name="model">llm.assistant</field>
         <field name="arch" type="xml">
-            <search string="Search Assistants">
+            <search>
                 <field name="name" />
                 <field name="code" />
                 <field name="res_model" />
@@ -296,7 +296,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter
             string="Category"
             name="category"

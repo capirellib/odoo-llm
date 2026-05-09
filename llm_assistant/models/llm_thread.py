@@ -306,12 +306,17 @@ class LLMThread(models.Model):
         try:
             if use_streaming:
                 # Handle streaming response - process tool calls directly from stream
+                # EN: Using sudo() to call chat() because the current user might not have direct access
+                # to the model or provider records, but is authorized to interact with the AI via this thread.
+                # ES: Usando sudo() para llamar a chat() porque el usuario actual podría no tener acceso directo
+                # a los registros del modelo o proveedor, pero está autorizado a interactuar con la IA a través de este hilo.
                 stream_response = self.sudo().model_id.chat(**chat_kwargs)
                 assistant_message = yield from self._handle_streaming_response(
                     stream_response,
                 )
             else:
-                # Handle non-streaming response
+                # EN: Using sudo() to call chat() for consistency with streaming mode and to bypass access restrictions.
+                # ES: Usando sudo() para llamar a chat() por consistencia con el modo streaming y para evitar restricciones de acceso.
                 response = self.sudo().model_id.chat(**chat_kwargs)
                 assistant_message = yield from self._handle_non_streaming_response(
                     response,

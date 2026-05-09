@@ -83,7 +83,7 @@
         <field name="name">llm.prompt.category.search</field>
         <field name="model">llm.prompt.category</field>
         <field name="arch" type="xml">
-            <search string="Search Categories">
+            <search>
                 <field name="name" />
                 <field name="code" />
                 <filter
@@ -91,7 +91,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter
             string="Parent Category"
             name="group_by_parent"

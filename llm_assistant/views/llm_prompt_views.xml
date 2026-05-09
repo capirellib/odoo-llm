@@ -237,7 +237,7 @@
         <field name="name">llm.prompt.search</field>
         <field name="model">llm.prompt</field>
         <field name="arch" type="xml">
-            <search string="Search Prompts">
+            <search>
                 <field name="name" />
                 <field name="description" />
                 <field name="category_id" />
@@ -262,7 +262,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter
             string="Format"
             name="group_by_format"

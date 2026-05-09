@@ -14,6 +14,10 @@ class LLMTool(models.Model):
     @api.model
     def get_mcp_tools_list(self, params=None):
         """Handle MCP tools/list request - return MCP ListToolsResult"""
+        # EN: Using sudo() because MCP server might be running in a context without session
+        # or specific user permissions, but needs to discover all active tools.
+        # ES: Usando sudo() porque el servidor MCP podría estar ejecutándose en un contexto sin sesión
+        # o permisos de usuario específicos, pero necesita descubrir todas las herramientas activas.
         active_tools = self.sudo().search([("active", "=", True)])
         mcp_tools = []
 

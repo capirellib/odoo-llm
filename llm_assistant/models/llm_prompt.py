@@ -344,6 +344,10 @@ class LLMPrompt(models.Model):
         arguments = arguments or {}
 
         # Fill default values for missing arguments
+        # EN: Using sudo() to fill default values because the arguments_json field might be restricted
+        # or the user might be interacting with the prompt via a thread without direct access to the prompt record.
+        # ES: Usando sudo() para completar los valores predeterminados porque el campo arguments_json podría estar restringido
+        # o el usuario podría estar interactuando con el prompt a través de un hilo sin acceso directo al registro del prompt.
         arguments = self.sudo()._fill_default_values(arguments)
 
         # Validate arguments against schema

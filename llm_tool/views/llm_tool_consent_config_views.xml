@@ -65,7 +65,7 @@
         <field name="name">llm.tool.consent.config.search</field>
         <field name="model">llm.tool.consent.config</field>
         <field name="arch" type="xml">
-            <search string="Search LLM Tool Consent Configurations">
+            <search>
                 <field name="name" />
                 <filter
           string="Active Configuration"

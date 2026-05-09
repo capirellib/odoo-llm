@@ -454,6 +454,10 @@ class LLMProvider(models.Model):
         _logger.info(f"FAL.AI JOB CREATION - Job ID: {job_record.id}")
 
         # Generate webhook URL dynamically (don't store on provider to avoid permission issues)
+        # EN: Using sudo() to get the base URL because the current user might not have access
+        # to the system settings (ir.config_parameter), but we need the URL for the webhook.
+        # ES: Usando sudo() para obtener la URL base porque el usuario actual podría no tener acceso
+        # a los parámetros del sistema (ir.config_parameter), pero necesitamos la URL para el webhook.
         webhook_url = self.webhook_url
         if not webhook_url:
             base_url = self.env["ir.config_parameter"].sudo().get_param("web.base.url")

@@ -1,5 +1,6 @@
 import logging
 
+# pyrefly: ignore [missing-import]
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
@@ -80,4 +81,8 @@ class MailMessage(models.Model):
                     "Invalid vote value. Must be an integer: 1 (up), -1 (down), or 0 (none)."
                 )
             )
+        # EN: Using sudo() to write the vote because the user might not have write access to the
+        # message record itself, but is allowed to vote on the AI response quality.
+        # ES: Usando sudo() para escribir el voto porque el usuario podría no tener acceso de escritura
+        # al registro del mensaje en sí, pero se le permite votar sobre la calidad de la respuesta de la IA.
         self.sudo().write({"user_vote": vote_value})

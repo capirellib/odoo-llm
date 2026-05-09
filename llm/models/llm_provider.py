@@ -83,6 +83,11 @@ class LLMProvider(models.Model):
     ):
         """Send chat messages using this provider.
 
+        EN: Dispatches the chat request to the specific provider implementation (OpenAI, Anthropic, etc.), 
+            handling message normalization, tool injection, and streaming options.
+        ES: Envía la solicitud de chat a la implementación específica del proveedor (OpenAI, Anthropic, etc.), 
+            manejando la normalización de mensajes, la inyección de herramientas y las opciones de streaming.
+
         Args:
             messages: mail.message recordset (Odoo records) to send
             model: Optional specific model to use
@@ -90,9 +95,6 @@ class LLMProvider(models.Model):
             tools: llm.tool recordset of available tools
             prepend_messages: List of pre-formatted message dicts to prepend (e.g., system prompts)
             **kwargs: Additional provider-specific parameters
-
-        Returns:
-            Generator yielding response chunks if streaming, else complete response
         """
         # Hook: allow extensions to modify prepend_messages (e.g., add tool consent)
         prepend_messages = self._prepare_prepend_messages(prepend_messages, tools)
