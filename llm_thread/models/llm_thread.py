@@ -716,6 +716,7 @@ class LLMThread(models.Model):
             _thread_to_store() y maneja las claves compuestas automáticamente.
         """
         self.ensure_one()
+        # pyrefly: ignore [missing-import]
         from odoo.addons.mail.tools.discuss import Store
 
         store = Store()
