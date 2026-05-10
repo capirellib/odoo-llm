@@ -23,6 +23,7 @@ export class LLMChatContainer extends Component {
     this.llmStore = useState(useService("llm.store"));
     this.mailStore = useState(useService("mail.store"));
     this.action = useService("action");
+    this.orm = useService("orm");
     this.ui = useState(useService("ui")); // Wrap with useState to make it reactive
 
     // Reference to the scrollable thread container for proper jump-to-present behavior
@@ -50,7 +51,7 @@ export class LLMChatContainer extends Component {
    */
   get isSmall() {
     const isActuallySmall = this.ui.isSmall;
-    const isChatterAside = this.env.inChatter?.aside ?? false;
+    const isChatterAside = (this.env.inChatter && this.env.inChatter.aside) || false;
     const shouldUseMobileLayout = isActuallySmall || isChatterAside;
     return shouldUseMobileLayout;
   }
@@ -59,7 +60,7 @@ export class LLMChatContainer extends Component {
    * Get the active thread from standard mail.store.discuss
    */
   get activeThread() {
-    const thread = this.mailStore.discuss?.thread;
+    const thread = this.mailStore.discuss && this.mailStore.discuss.thread;
     return thread;
   }
 
@@ -67,14 +68,14 @@ export class LLMChatContainer extends Component {
    * Check if we have an active LLM thread
    */
   get hasActiveThread() {
-    return this.activeThread?.model === "llm.thread";
+    return this.activeThread && this.activeThread.model === "llm.thread";
   }
 
   /**
    * Get composer for the active thread
    */
   get threadComposer() {
-    return this.activeThread?.composer;
+    return this.activeThread && this.activeThread.composer;
   }
 
   /**
@@ -212,13 +213,13 @@ export class LLMChatContainer extends Component {
       {
         onClose: async () => {
           // Refresh thread data after closing form
-          await this.activeThread.fetchData([
-            "name",
-            "provider_id",
-            "model_id",
-            "tool_ids",
-            "assistant_id",
-          ]);
+          // Refresh thread data after closing form using Odoo 19 pattern
+          const storeData = await this.orm.call(
+            "llm.thread",
+            "to_store_format",
+            [this.activeThread.id]
+          );
+          this.mailStore.insert(storeData);
         },
       }
     );

@@ -25,7 +25,11 @@ patch(Composer.prototype, {
    * Check if current thread is an LLM thread
    */
   get isLLMThread() {
-    return this.props.composer?.thread?.model === "llm.thread";
+    return (
+      this.props.composer &&
+      this.props.composer.thread &&
+      this.props.composer.thread.model === "llm.thread"
+    );
   },
 
   /**
@@ -37,12 +41,13 @@ patch(Composer.prototype, {
     }
 
     const thread = this.props.composer.thread;
-    if (!thread?.id) {
+    if (!thread || !thread.id) {
       return false;
     }
 
     // Get model info from llmStore
-    const modelId = thread.model_id?.id || thread.model_id;
+    const modelId =
+      (thread.model_id && thread.model_id.id) || thread.model_id;
     if (!modelId) {
       return false;
     }

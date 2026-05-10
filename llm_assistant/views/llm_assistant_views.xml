@@ -115,7 +115,7 @@
                             <group>
                                 <field
                   name="default_values"
-                  widget="json_editor"
+                  
                 />
                                 <field
                   name="has_dynamic_defaults"
@@ -296,7 +296,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Category"
             name="category"

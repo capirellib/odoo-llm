@@ -145,7 +145,7 @@
                             <group>
                                 <field
                   name="arguments_json"
-                  widget="json_editor"
+                  
                   placeholder="{
   'user_name': {
     'type': 'string',
@@ -163,7 +163,7 @@
                                 <field
                   name="input_schema_json"
                   readonly="1"
-                  widget="json_editor"
+                  
                 />
                             </group>
                             <div class="alert alert-info" role="alert">
@@ -227,7 +227,7 @@
                 <field name="argument_count" />
                 <field name="usage_count" />
                 <field name="last_used" />
-                <field name="active" invisible="1" />
+                <field name="active" column_invisible="True" />
             </list>
         </field>
     </record>
@@ -262,7 +262,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Format"
             name="group_by_format"

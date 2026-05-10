@@ -44,10 +44,10 @@
                             <field name="default" />
                         </group>
                         <group>
-                            <field name="details" widget="json_editor" />
-                            <field name="model_info" widget="json_editor" />
-                            <field name="parameters" widget="text" />
-                            <field name="template" widget="text" />
+                            <field name="details" />
+                            <field name="model_info" />
+                            <field name="parameters" />
+                            <field name="template" />
                         </group>
                     </group>
                 </sheet>
@@ -66,7 +66,7 @@
                 <field name="provider_id" />
                 <field name="model_use" />
                 <field name="default" />
-                <field name="active" invisible="1" />
+                <field name="active" column_invisible="True" />
             </list>
         </field>
     </record>
@@ -91,7 +91,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Provider"
             name="group_by_provider"

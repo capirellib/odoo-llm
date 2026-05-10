@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="llm_thread.llm_thread_view_form" />
         <field name="arch" type="xml">
             <field name="tool_ids" position="after">
-                <field name="is_letta_provider" invisible="1" />
+                <field name="is_letta_provider" column_invisible="True" />
                 <field
           name="external_id"
           readonly="1"

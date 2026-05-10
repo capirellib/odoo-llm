@@ -50,3 +50,16 @@ ES:
 1. **Pruebas Manuales**: Verificar la capacidad de respuesta de la interfaz de chat en el entorno de Odoo 19.
 2. **Compilación de Assets**: Ejecutar el servidor Odoo con `-u all` para verificar los parches de componentes OWL.
 3. **Dependencias Externas**: Asegurar que `rlPyCairo` y otros requisitos estén instalados en el entorno de Python 3.12.
+
+## 5. Stability and Bug Fixes
+## 5. Estabilidad y Corrección de Errores
+
+EN:
+- Fixed an RPC error (OpenAI `NotFoundError`) when fetching models from providers with incorrect Base URLs (e.g., Z.ai).
+- Implemented robust try-except handling in `action_fetch_models` to provide bilingual user-friendly error messages instead of system crashes.
+- Improved OpenAI provider feedback for 404 errors, suggesting the correct Base URL format.
+
+ES:
+- Corregido un error RPC (OpenAI `NotFoundError`) al obtener modelos de proveedores con URLs Base incorrectas (ej: Z.ai).
+- Implementado un manejo robusto de try-except en `action_fetch_models` para proporcionar mensajes de error bilingües amigables para el usuario en lugar de fallos del sistema.
+- Mejorada la retroalimentación del proveedor OpenAI para errores 404, sugiriendo el formato correcto de la URL Base.

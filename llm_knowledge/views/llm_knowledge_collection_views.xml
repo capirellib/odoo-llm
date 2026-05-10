@@ -163,7 +163,7 @@
                     name="model_id"
                     options="{'no_create': True}"
                   />
-                                    <field name="model_name" invisible="1" />
+                                    <field name="model_name" column_invisible="True" />
                                     <field
                     name="domain"
                     widget="domain"
@@ -217,7 +217,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Embedding Model"
             name="group_by_model"

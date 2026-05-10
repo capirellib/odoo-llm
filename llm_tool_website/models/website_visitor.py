@@ -23,18 +23,17 @@ class WebsiteToolVisitor(models.Model):
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
     ) -> dict:
-        """Get aggregate visitor statistics
-
-        Returns total visitors, connected visitors, and top visited
-        pages for the given period.
+        """
+        EN: Get aggregate visitor statistics. Returns total visitors, connected visitors, and top visited pages for the given period.
+        ES: Obtener estadísticas agregadas de visitantes. Devuelve el total de visitantes, visitantes conectados y las páginas más visitadas para el período dado.
 
         Args:
-            website: Website name or ID (defaults to current website)
-            date_from: Start date (YYYY-MM-DD)
-            date_to: End date (YYYY-MM-DD)
+            website: Website name or ID (defaults to current website) / Nombre o ID del sitio web (por defecto el sitio web actual)
+            date_from: Start date (YYYY-MM-DD) / Fecha de inicio (AAAA-MM-DD)
+            date_to: End date (YYYY-MM-DD) / Fecha de fin (AAAA-MM-DD)
 
         Returns:
-            Dictionary with visitor statistics
+            Dictionary with visitor statistics / Diccionario con estadísticas de visitantes
         """
         ws = self._resolve_website(website)
         domain = [("website_id", "=", ws.id)]
@@ -44,6 +43,8 @@ class WebsiteToolVisitor(models.Model):
         if date_to:
             domain.append(("last_connection_datetime", "<=", date_to))
 
+        # EN: Using sudo() to access visitor data because the current user might not have direct read access to website analytics.
+        # ES: Usando sudo() para acceder a los datos de los visitantes porque el usuario actual podría no tener acceso directo de lectura a las analíticas del sitio web.
         Visitor = self.env["website.visitor"].sudo()
         visitors = Visitor.search(domain)
 
@@ -54,6 +55,8 @@ class WebsiteToolVisitor(models.Model):
         # Top pages from tracks
         top_pages = []
         if visitors:
+            # EN: Using sudo() to access track data for statistical purposes.
+            # ES: Usando sudo() para acceder a los datos de seguimiento (tracks) con fines estadísticos.
             Track = self.env["website.track"].sudo()
             page_groups = Track._read_group(
                 domain=[
@@ -90,19 +93,19 @@ class WebsiteToolVisitor(models.Model):
         website: Optional[str] = None,
         limit: int = 50,
     ) -> dict:
-        """Search website visitors
-
-        Find visitors by partner, country, or connection status.
+        """
+        EN: Search website visitors. Find visitors by partner, country, or connection status.
+        ES: Buscar visitantes del sitio web. Buscar visitantes por socio, país o estado de conexión.
 
         Args:
-            partner: Partner name (partial match)
-            country: Country name or code
-            is_connected: Filter by active connection (True = online now)
-            website: Website name or ID (defaults to current website)
-            limit: Maximum results (default: 50)
+            partner: Partner name (partial match) / Nombre del socio (coincidencia parcial)
+            country: Country name or code / Nombre o código del país
+            is_connected: Filter by active connection (True = online now) / Filtrar por conexión activa (True = en línea ahora)
+            website: Website name or ID (defaults to current website) / Nombre o ID del sitio web (por defecto el sitio web actual)
+            limit: Maximum results (default: 50) / Resultados máximos (por defecto: 50)
 
         Returns:
-            Dictionary with matching visitors
+            Dictionary with matching visitors / Diccionario con visitantes coincidentes
         """
         ws = self._resolve_website(website)
         domain = [("website_id", "=", ws.id)]
@@ -119,6 +122,8 @@ class WebsiteToolVisitor(models.Model):
             )
             domain.append(("country_id", "in", countries.ids))
 
+        # EN: Using sudo() to search visitors as analytics data might be restricted for the current user.
+        # ES: Usando sudo() para buscar visitantes ya que los datos de analítica podrían estar restringidos para el usuario actual.
         Visitor = self.env["website.visitor"].sudo()
         visitors = Visitor.search(
             domain, limit=limit, order="last_connection_datetime desc"
@@ -151,23 +156,26 @@ class WebsiteToolVisitor(models.Model):
         self,
         visitor_id: int,
     ) -> dict:
-        """Get detailed information about a specific visitor
-
-        Returns full visitor details including partner info, visit
-        history, and page view timeline.
+        """
+        EN: Get detailed information about a specific visitor. Returns full visitor details including partner info, visit history, and page view timeline.
+        ES: Obtener información detallada sobre un visitante específico. Devuelve los detalles completos del visitante, incluida la información del socio, el historial de visitas y la cronología de visualización de páginas.
 
         Args:
-            visitor_id: ID of the visitor to look up
+            visitor_id: ID of the visitor to look up / ID del visitante a consultar
 
         Returns:
-            Dictionary with detailed visitor information
+            Dictionary with detailed visitor information / Diccionario con información detallada del visitante
         """
+        # EN: Using sudo() to access detailed visitor data.
+        # ES: Usando sudo() para acceder a los datos detallados del visitante.
         Visitor = self.env["website.visitor"].sudo()
         visitor = Visitor.browse(visitor_id).exists()
         if not visitor:
             raise UserError(_("Visitor with ID %s not found") % visitor_id)
 
         # Get page visit history
+        # EN: Using sudo() to retrieve the page history timeline for the visitor.
+        # ES: Usando sudo() para recuperar la cronología del historial de páginas del visitante.
         Track = self.env["website.track"].sudo()
         tracks = Track.search(
             [("visitor_id", "=", visitor.id)],

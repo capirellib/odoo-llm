@@ -20,7 +20,7 @@
                             <field name="model_count" />
                         </group>
                         <group>
-                            <field name="meta" widget="json_editor" />
+                            <field name="meta" />
                         </group>
                     </group>
                     <notebook>
@@ -85,7 +85,7 @@
           name="frontier"
           domain="[('frontier', '=', True)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Official Status"
             name="group_by_official"

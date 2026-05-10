@@ -104,7 +104,7 @@ export class JsonEditorField extends Component {
     }
 
     // Add schema for autocomplete if available
-    if (this.props.nodeOptions?.schema) {
+    if (this.props.nodeOptions && this.props.nodeOptions.schema) {
       try {
         options.schema =
           typeof this.props.nodeOptions.schema === "string"

@@ -18,7 +18,8 @@ patch(LLMThreadHeader.prototype, {
    * Get current assistant following existing pattern
    */
   get currentAssistant() {
-    if (!this.assistantStore?.currentAssistant) return null;
+    if (!this.assistantStore || !this.assistantStore.currentAssistant)
+      return null;
     return this.assistantStore.currentAssistant;
   },
 
@@ -26,7 +27,8 @@ patch(LLMThreadHeader.prototype, {
    * Get available assistants following existing pattern
    */
   get availableAssistants() {
-    if (!this.assistantStore?._assistantsLoaded) return [];
+    if (!this.assistantStore || !this.assistantStore._assistantsLoaded)
+      return [];
     return Array.from(this.assistantStore.llmAssistants.values());
   },
 
@@ -38,7 +40,11 @@ patch(LLMThreadHeader.prototype, {
     if (!this.assistantStore) return;
 
     const assistantId = assistant ? assistant.id : null;
-    if (assistantId === this.currentAssistant?.id) return;
+    if (
+      assistantId ===
+      (this.currentAssistant && this.currentAssistant.id)
+    )
+      return;
 
     try {
       this.state.isLoadingUpdate = true;

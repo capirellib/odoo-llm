@@ -25,7 +25,7 @@ patch(Thread.prototype, {
    * Check if current thread is an LLM thread
    */
   get isLLMThread() {
-    return this.props.thread?.model === "llm.thread";
+    return this.props.thread && this.props.thread.model === "llm.thread";
   },
 
   /**
@@ -33,7 +33,7 @@ patch(Thread.prototype, {
    */
   get isStreaming() {
     if (!this.isLLMThread) return false;
-    return this.llmStore?.getStreamingStatus() || false;
+    return (this.llmStore && this.llmStore.getStreamingStatus()) || false;
   },
 
   /**
@@ -81,13 +81,13 @@ patch(Thread.prototype, {
    * Override scrollToBottom to handle streaming messages
    */
   scrollToBottom() {
-    super.scrollToBottom?.();
+    super.scrollToBottom();
 
     // For LLM threads, ensure we scroll when new chunks arrive
     if (this.isLLMThread && this.isStreaming) {
       // Scroll after a short delay to account for content updates
       setTimeout(() => {
-        super.scrollToBottom?.();
+        super.scrollToBottom();
       }, 100);
     }
   },

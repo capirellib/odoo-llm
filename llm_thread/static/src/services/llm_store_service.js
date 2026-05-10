@@ -34,8 +34,10 @@ export const llmStoreService = {
       // Computed properties - using mailStore as source of truth
       get activeLLMThread() {
         // Check if current active thread in mail.store is an LLM thread
-        const activeThread = mailStore.discuss?.thread;
-        return activeThread?.model === "llm.thread" ? activeThread : null;
+        const activeThread = mailStore.discuss && mailStore.discuss.thread;
+        return activeThread && activeThread.model === "llm.thread"
+          ? activeThread
+          : null;
       },
 
       get isLLMThread() {
@@ -43,25 +45,45 @@ export const llmStoreService = {
       },
 
       get llmThreadList() {
-        // Get all LLM threads from mailStore
-        const allThreads = Object.values(mailStore.Thread.records || {});
+        // Get all LLM threads from multiple possible collections in Odoo 19
+        const threadCol =
+          mailStore.Thread && mailStore.Thread.records
+            ? Object.values(mailStore.Thread.records)
+            : [];
+        const customCol =
+          mailStore["llm.thread"] && mailStore["llm.thread"].records
+            ? Object.values(mailStore["llm.thread"].records)
+            : [];
+
+        const allThreads = [...threadCol, ...customCol];
         return allThreads
           .filter((thread) => thread.model === "llm.thread")
-          .sort(
-            (a, b) => new Date(b.write_date || 0) - new Date(a.write_date || 0)
-          );
+          .sort((a, b) => {
+            const dateA = new Date(a.write_date || 0);
+            const dateB = new Date(b.write_date || 0);
+            return dateB - dateA;
+          });
       },
 
       // LLM-specific methods using standard fetchData approach
       async ensureThreadLoaded(threadId) {
-        // Check if thread already exists in mailStore
-        const thread = mailStore.Thread.get({
-          model: "llm.thread",
-          id: threadId,
-        });
-        if (thread) {
-          return thread;
+        // In Odoo 19, threads can be in mailStore.Thread or in a dynamic collection for the model
+        // We search both to be 100% sure we find the thread
+        const collections = ["Thread", "llm.thread"];
+        for (const colName of collections) {
+          const collection = mailStore[colName];
+          if (collection && collection.records) {
+            const allRecords = Object.values(collection.records);
+            const thread = allRecords.find(
+              (t) => t.id === threadId && (t.model === "llm.thread" || !t.model)
+            );
+            if (thread) {
+              return thread;
+            }
+          }
         }
+        return null;
+      },
 
         // If thread not found, it might not be accessible to current user
         // or wasn't loaded in init_messaging (e.g., old thread, different user)
@@ -70,7 +92,10 @@ export const llmStoreService = {
       },
 
       async sendLLMMessage(threadId, content, attachmentIds = []) {
-        if (!threadId || (!content?.trim() && attachmentIds.length === 0)) {
+        if (
+          !threadId ||
+          ((!content || !content.trim()) && attachmentIds.length === 0)
+        ) {
           return;
         }
 
@@ -344,11 +369,12 @@ export const llmStoreService = {
 
       // Refresh threads and select specific thread
       async refreshThreadsAndSelect(threadId) {
-        // Use proper fetchData to refresh thread data
-        // Will trigger proper reload of all threads
-        await mailStore.fetchData({
-          init_messaging: {},
-        });
+        // Fetch the newly created thread in store format compatible with Odoo 19
+        const storeData = await orm.call("llm.thread", "to_store_format", [
+          threadId,
+        ]);
+        // Insert into mailStore to update the UI reactively
+        mailStore.insert(storeData);
 
         // Wait a moment for threads to be populated
         await new Promise((resolve) => setTimeout(resolve, 100));
@@ -442,8 +468,8 @@ export const llmStoreService = {
       },
 
       getStreamingStatus() {
-        const activeThread = mailStore.discuss?.thread;
-        if (activeThread?.model === "llm.thread") {
+        const activeThread = mailStore.discuss && mailStore.discuss.thread;
+        if (activeThread && activeThread.model === "llm.thread") {
           return this.isStreamingThread(activeThread.id);
         }
         return false;

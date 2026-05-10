@@ -81,7 +81,7 @@
             >
                             <DropdownItem
                 onSelected="() => this.selectProvider(provider)"
-                class="{'active': currentProvider?.id === provider.id}"
+                class="{'active': currentProvider and currentProvider.id === provider.id}"
               >
                                 <span t-esc="provider.name" />
                             </DropdownItem>
@@ -135,7 +135,7 @@
               >
                                 <DropdownItem
                   onSelected="() => this.selectModel(model)"
-                  class="{'active': currentModel?.id === model.id}"
+                  class="{'active': currentModel and currentModel.id === model.id}"
                 >
                                     <div
                     class="d-flex justify-content-between align-items-center"

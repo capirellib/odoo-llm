@@ -91,7 +91,7 @@
           name="inactive"
           domain="[('active', '=', False)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Parent Category"
             name="group_by_parent"

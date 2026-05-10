@@ -24,10 +24,11 @@ patch(llmStoreService, {
     Object.defineProperty(llmStore, "currentAssistant", {
       get: function () {
         const activeThread = this.activeLLMThread;
-        if (!activeThread?.assistant_id) return null;
+        if (!activeThread || !activeThread.assistant_id) return null;
 
         const assistantId =
-          activeThread.assistant_id?.id || activeThread.assistant_id;
+          (activeThread.assistant_id && activeThread.assistant_id.id) ||
+          activeThread.assistant_id;
         const assistant = this.llmAssistants.get(assistantId);
 
         return assistant || activeThread.assistant_id;

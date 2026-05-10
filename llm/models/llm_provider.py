@@ -39,11 +39,17 @@ class LLMProvider(models.Model):
 
     @property
     def client(self):
-        """Get client instance using dispatch pattern"""
+        """
+        EN: Get client instance using dispatch pattern.
+        ES: Obtener una instancia del cliente usando el patrón de despacho (dispatch).
+        """
         return self._dispatch("get_client")
 
     def _dispatch(self, method, *args, record=None, **kwargs):
-        """Dispatch method call to appropriate service implementation on self or a given record."""
+        """
+        EN: Dispatch method call to appropriate service implementation on self or a given record.
+        ES: Despachar la llamada al método a la implementación de servicio adecuada en sí mismo o en un registro dado.
+        """
         if not self.service:
             raise UserError(_("Provider service not configured"))
 
@@ -61,7 +67,10 @@ class LLMProvider(models.Model):
 
     @api.model
     def _selection_service(self):
-        """Get all available services from provider implementations"""
+        """
+        EN: Get all available services from provider implementations.
+        ES: Obtener todos los servicios disponibles de las implementaciones de los proveedores.
+        """
         services = []
         for provider in self._get_available_services():
             services.append(provider)
@@ -69,7 +78,10 @@ class LLMProvider(models.Model):
 
     @api.model
     def _get_available_services(self):
-        """Hook method for registering provider services"""
+        """
+        EN: Hook method for registering provider services.
+        ES: Método de gancho (hook) para registrar servicios de proveedores.
+        """
         return []
 
     def chat(
@@ -153,7 +165,10 @@ class LLMProvider(models.Model):
         return ""
 
     def embedding(self, texts, model=None):
-        """Generate embeddings using this provider"""
+        """
+        EN: Generate embeddings using this provider.
+        ES: Generar incrustaciones (embeddings) usando este proveedor.
+        """
         return self._dispatch("embedding", texts, model=model)
 
     def generate(self, input_data, model=None, stream=False, **kwargs):
@@ -179,11 +194,17 @@ class LLMProvider(models.Model):
         )
 
     def list_models(self, model_id=None):
-        """List available models from the provider"""
+        """
+        EN: List available models from the provider.
+        ES: Listar modelos disponibles del proveedor.
+        """
         return self._dispatch("models", model_id=model_id)
 
     def action_fetch_models(self):
-        """Fetch models from provider and open import wizard"""
+        """
+        EN: Fetch models from provider and open import wizard.
+        ES: Obtener modelos del proveedor y abrir el asistente de importación.
+        """
         self.ensure_one()
 
         # Create wizard first so it has an ID
@@ -210,38 +231,49 @@ class LLMProvider(models.Model):
         wizard_models = set()
         lines_to_create = []
 
-        for model_data in models_data:
-            details = model_data.get("details", {})
-            name = model_data.get("name") or details.get("id")
+        try:
+            for model_data in models_data:
+                details = model_data.get("details", {})
+                name = model_data.get("name") or details.get("id")
 
-            if not name:
-                continue
+                if not name:
+                    continue
 
-            # Skip duplicates
-            if name in wizard_models:
-                continue
-            wizard_models.add(name)
+                # Skip duplicates
+                if name in wizard_models:
+                    continue
+                wizard_models.add(name)
 
-            # Determine model use and capabilities
-            capabilities = details.get("capabilities", ["chat"])
-            model_use = self._determine_model_use(name, capabilities)
+                # Determine model use and capabilities
+                capabilities = details.get("capabilities", ["chat"])
+                model_use = self._determine_model_use(name, capabilities)
 
-            # Check against existing models
-            existing = existing_models.get(name)
-            status = "new"
-            if existing:
-                status = "modified" if existing.details != details else "existing"
+                # Check against existing models
+                existing = existing_models.get(name)
+                status = "new"
+                if existing:
+                    status = "modified" if existing.details != details else "existing"
 
-            lines_to_create.append(
-                {
-                    "wizard_id": wizard.id,
-                    "name": name,
-                    "model_use": model_use,
-                    "status": status,
-                    "details": details,
-                    "existing_model_id": existing.id if existing else False,
-                    "selected": status in ["new", "modified"],
-                },
+                lines_to_create.append(
+                    {
+                        "wizard_id": wizard.id,
+                        "name": name,
+                        "model_use": model_use,
+                        "status": status,
+                        "details": details,
+                        "existing_model_id": existing.id if existing else False,
+                        "selected": status in ["new", "modified"],
+                    },
+                )
+        except Exception as e:
+            _logger.error(f"Error fetching models for provider {self.name}: {e!s}")
+            raise UserError(
+                _(
+                    "EN: Error fetching models from provider '%s'. Please check your API key, Base URL, and network connection.\n\n"
+                    "ES: Error al obtener los modelos del proveedor '%s'. Por favor, verifique su clave API, URL Base y conexión de red.\n\n"
+                    "Technical details: %s",
+                )
+                % (self.name, self.name, str(e)),
             )
 
         # Create all lines
@@ -322,14 +354,16 @@ class LLMProvider(models.Model):
         return "chat"
 
     def get_model(self, model=None, model_use="chat"):
-        """Get a model to use for the given purpose
+        """
+        EN: Get a model to use for the given purpose.
+        ES: Obtener un modelo para usar con el propósito dado.
 
         Args:
-            model: Optional specific model to use
-            model_use: Type of model to get if no specific model provided
+            model: Optional specific model to use / Modelo específico opcional a usar
+            model_use: Type of model to get if no specific model provided / Tipo de modelo a obtener si no se proporciona un modelo específico
 
         Returns:
-            llm.model record to use
+            llm.model record to use / Registro llm.model a usar
         """
         if model:
             return model
@@ -387,7 +421,10 @@ class LLMProvider(models.Model):
         }
 
     def format_tools(self, tools):
-        """Format tools for the specific provider"""
+        """
+        EN: Format tools for the specific provider.
+        ES: Formatear herramientas para el proveedor específico.
+        """
         return self._dispatch("format_tools", tools)
 
     def format_messages(self, messages, system_prompt=None, model=None):

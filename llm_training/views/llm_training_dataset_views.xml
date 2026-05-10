@@ -85,7 +85,7 @@
                 <field name="name" />
                 <field name="file_count" />
                 <field name="example_count" />
-                <field name="active" invisible="1" />
+                <field name="active" column_invisible="True" />
             </list>
         </field>
     </record>

@@ -52,7 +52,7 @@
                 <field name="embedding_model_id" />
                 <field name="resource_id" />
                 <field name="collection_ids" />
-                <group string="Group By">
+                <group>
                     <filter
             string="Embedding Model"
             name="group_by_model"

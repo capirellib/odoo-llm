@@ -26,7 +26,10 @@ class LLMThread(models.Model):
 
     @api.onchange("assistant_id")
     def _onchange_assistant_id(self):
-        """Update provider, model and tools when assistant changes"""
+        """
+        EN: Update provider, model and tools when assistant changes.
+        ES: Actualizar el proveedor, el modelo y las herramientas cuando cambia el asistente.
+        """
         if self.assistant_id:
             self.provider_id = self.assistant_id.provider_id
             self.model_id = self.assistant_id.model_id
@@ -37,13 +40,15 @@ class LLMThread(models.Model):
             self.prompt_id = False
 
     def set_assistant(self, assistant_id):
-        """Set the assistant for this thread and update related fields
+        """
+        EN: Set the assistant for this thread and update related fields.
+        ES: Establecer el asistente para este hilo y actualizar los campos relacionados.
 
         Args:
-            assistant_id (int): The ID of the assistant to set
+            assistant_id (int): The ID of the assistant to set / El ID del asistente a establecer
 
         Returns:
-            bool: True if successful, False otherwise
+            bool: True if successful, False otherwise / True si tiene éxito, False en caso contrario
         """
         self.ensure_one()
 
@@ -70,10 +75,12 @@ class LLMThread(models.Model):
         return self.write(update_vals)
 
     def action_open_thread(self):
-        """Open the thread in the chat client interface
+        """
+        EN: Open the thread in the chat client interface.
+        ES: Abrir el hilo en la interfaz del cliente de chat.
 
         Returns:
-            dict: Action to open the thread in the chat client
+            dict: Action to open the thread in the chat client / Acción para abrir el hilo en el cliente de chat
         """
         self.ensure_one()
         return {
@@ -90,14 +97,14 @@ class LLMThread(models.Model):
 
     def get_context(self, base_context=None):
         """
-        Get the context to pass to prompt rendering with thread-specific enhancements.
-        This is the canonical method for creating prompt context in both production and testing.
+        EN: Get the context to pass to prompt rendering with thread-specific enhancements. This is the canonical method for creating prompt context in both production and testing.
+        ES: Obtener el contexto para pasar a la renderización de la indicación (prompt) con mejoras específicas del hilo. Este es el método canónico para crear el contexto de la indicación tanto en producción como en pruebas.
 
         Args:
-            base_context (dict): Additional context from caller (optional)
+            base_context (dict): Additional context from caller / Contexto adicional del llamador
 
         Returns:
-            dict: Context ready for prompt rendering
+            dict: Context ready for prompt rendering / Contexto listo para la renderización de la indicación (prompt)
         """
         context = super().get_context(base_context or {})
 
@@ -115,15 +122,15 @@ class LLMThread(models.Model):
 
     @api.model
     def get_thread_by_id(self, thread_id):
-        """Get a thread record by its ID
+        """
+        EN: Get a thread record by its ID.
+        ES: Obtener un registro de hilo por su ID.
 
         Args:
-            thread_id (int): ID of the thread
+            thread_id (int): ID of the thread / ID del hilo
 
         Returns:
-            tuple: (thread, error_response)
-                  If successful, error_response will be None
-                  If error, thread will be None
+            tuple: (thread, error_response) / (hilo, respuesta_error)
         """
         thread = self.browse(int(thread_id))
         if not thread.exists():
@@ -132,16 +139,16 @@ class LLMThread(models.Model):
 
     @api.model
     def get_thread_and_assistant(self, thread_id, assistant_id=False):
-        """Get thread and assistant records by their IDs
+        """
+        EN: Get thread and assistant records by their IDs.
+        ES: Obtener registros de hilo y asistente por sus IDs.
 
         Args:
-            thread_id (int): ID of the thread
-            assistant_id (int, optional): ID of the assistant, or False to clear
+            thread_id (int): ID of the thread / ID del hilo
+            assistant_id (int, optional): ID of the assistant / ID del asistente
 
         Returns:
-            tuple: (thread, assistant, error_response)
-                  If successful, error_response will be None
-                  If error, thread and/or assistant will be None
+            tuple: (thread, assistant, error_response) / (hilo, asistente, respuesta_error)
         """
         # Get thread
         thread, error = self.get_thread_by_id(thread_id)
@@ -159,9 +166,12 @@ class LLMThread(models.Model):
 
         return thread, assistant, None
 
-    def _thread_to_store(self, store, **kwargs):
-        """Extend base _thread_to_store to include assistant_id and prompt_id."""
-        super()._thread_to_store(store, **kwargs)
+    def _thread_to_store(self, store, fields, **kwargs):
+        """
+        EN: Extend base _thread_to_store to include assistant-specific fields.
+        ES: Extender el _thread_to_store base para incluir campos específicos de asistente.
+        """
+        super()._thread_to_store(store, fields, **kwargs)
 
         # Always add assistant_id and prompt_id to thread data (either value or False)
         for thread in self:
@@ -184,10 +194,14 @@ class LLMThread(models.Model):
                 if thread.prompt_id
                 else False,
             }
-            store.add("mail.thread", thread_data)
+            # Use mail.thread model for the store to ensure JS pick it up in Thread collection
+            store.add(thread, thread_data)
 
     def _extract_message_content(self, message):
-        """Extract text content from a message regardless of format"""
+        """
+        EN: Extract text content from a message regardless of format.
+        ES: Extraer el contenido de texto de un mensaje independientemente del formato.
+        """
         content = message.get("content", "")
 
         if isinstance(content, list) and len(content) > 0:
@@ -197,7 +211,10 @@ class LLMThread(models.Model):
         return ""
 
     def get_prepend_messages(self):
-        """Hook: return a list of formatted messages to prepend to the conversation."""
+        """
+        EN: Hook: return a list of formatted messages to prepend to the conversation.
+        ES: Hook: devolver una lista de mensajes formateados para anteponer a la conversación.
+        """
         self.ensure_one()
 
         if self.prompt_id:
@@ -223,7 +240,10 @@ class LLMThread(models.Model):
         return []
 
     def generate_messages(self, last_message):
-        """Generate messages with actual AI intelligence."""
+        """
+        EN: Generate messages with actual AI intelligence.
+        ES: Generar mensajes con inteligencia artificial real.
+        """
         self.ensure_one()
 
         # Get last message if not provided
@@ -334,7 +354,10 @@ class LLMThread(models.Model):
         return assistant_message
 
     def _prepare_chat_kwargs(self, message_history, use_streaming):
-        """Prepare chat kwargs for provider. Can be overridden by extensions."""
+        """
+        EN: Prepare chat kwargs for provider. Can be overridden by extensions.
+        ES: Preparar chat kwargs para el proveedor. Puede ser sobrescrito por extensiones.
+        """
         return {
             "messages": message_history,
             "tools": self.tool_ids,
@@ -343,19 +366,15 @@ class LLMThread(models.Model):
         }
 
     def get_llm_messages(self, limit=25):
-        """Get the most recent LLM messages in chronological order.
-
-        This method is optimized for LLM context preparation:
-        - Always returns messages in chronological order (ASC)
-        - Limits to the most recent N messages for context window management
-        - Uses efficient database queries with proper indexing
-        - Excludes error messages (is_error=True) from context
+        """
+        EN: Get the most recent LLM messages in chronological order.
+        ES: Obtener los mensajes de LLM más recientes en orden cronológico.
 
         Args:
-            limit (int): Maximum number of recent messages to retrieve (default: 25)
+            limit (int): Maximum number of recent messages to retrieve / Número máximo de mensajes recientes a recuperar
 
         Returns:
-            mail.message recordset: Recent LLM messages in chronological order
+            mail.message recordset: Recent LLM messages in chronological order / Conjunto de registros mail.message: Mensajes de LLM recientes en orden cronológico
         """
         self.ensure_one()
 
@@ -384,13 +403,12 @@ class LLMThread(models.Model):
         )
 
     def get_latest_llm_message(self):
-        """Get the most recent LLM message for flow control.
+        """
+        EN: Get the most recent LLM message for flow control.
+        ES: Obtener el mensaje de LLM más reciente para el control de flujo.
 
         Returns:
-            mail.message: The latest LLM message
-
-        Raises:
-            UserError: If no LLM messages exist
+            mail.message: The latest LLM message / mail.message: El último mensaje de LLM
         """
         self.ensure_one()
 
@@ -412,7 +430,10 @@ class LLMThread(models.Model):
         return result[0]
 
     def _should_continue(self, last_message):
-        """Simplified continue logic based on message history."""
+        """
+        EN: Simplified continue logic based on message history.
+        ES: Lógica de continuación simplificada basada en el historial de mensajes.
+        """
         if not last_message:
             return False
 
@@ -428,7 +449,10 @@ class LLMThread(models.Model):
         return False
 
     def _handle_streaming_response(self, stream_response):
-        """Handle streaming response from LLM provider with tool call processing."""
+        """
+        EN: Handle streaming response from LLM provider with tool call processing.
+        ES: Manejar la respuesta en flujo del proveedor de LLM con procesamiento de llamadas a herramientas.
+        """
         message = None
         accumulated_content = ""
         collected_tool_calls = []
@@ -490,7 +514,10 @@ class LLMThread(models.Model):
         return message
 
     def _handle_non_streaming_response(self, response):
-        """Handle non-streaming response from LLM provider."""
+        """
+        EN: Handle non-streaming response from LLM provider.
+        ES: Manejar la respuesta no transmitida en flujo del proveedor de LLM.
+        """
         # Extract content and tool calls from response
         content = response.get("content", "")
         tool_calls = response.get("tool_calls", [])
@@ -516,17 +543,16 @@ class LLMThread(models.Model):
         return assistant_message
 
     def _execute_tool_call(self, tool_call, assistant_message):
-        """Execute a single tool call and return the tool message.
+        """
+        EN: Execute a single tool call and return the tool message.
+        ES: Ejecutar una sola llamada a herramienta y devolver el mensaje de la herramienta.
 
         Args:
-            tool_call (dict): Tool call data from assistant message
-            assistant_message (mail.message): The assistant message that contains the tool calls
-
-        Yields:
-            dict: Status updates for streaming
+            tool_call (dict): Tool call data from assistant message / Datos de la llamada a la herramienta del mensaje del asistente
+            assistant_message (mail.message): The assistant message that contains the tool calls / El mensaje del asistente que contiene las llamadas a las herramientas
 
         Returns:
-            mail.message: The tool message with execution result
+            mail.message: The tool message with execution result / El mensaje de la herramienta con el resultado de la ejecución
         """
         try:
             # Create tool message using the post_tool_call method

@@ -47,7 +47,7 @@
             >
                             <div class="d-flex align-items-center">
                                 <i
-                  t-if="currentAssistant?.id === assistant.id"
+                  t-if="currentAssistant and currentAssistant.id === assistant.id"
                   class="fa fa-check me-2 text-success"
                 />
                                 <span t-esc="assistant.name" />

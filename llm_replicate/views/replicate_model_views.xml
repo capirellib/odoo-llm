@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="llm.llm_model_view_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='provider_id']" position="after">
-                <field name="is_replicate_provider" invisible="1" />
+                <field name="is_replicate_provider" column_invisible="True" />
                 <label
           for="replicate_version"
           invisible="not is_replicate_provider"

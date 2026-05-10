@@ -219,7 +219,9 @@ export class RecordPickerDialog extends Component {
    * @returns {Boolean}
    */
   isRecordSelected(record) {
-    return this.state.selectedRecord?.id === record.id;
+    return (
+      this.state.selectedRecord && this.state.selectedRecord.id === record.id
+    );
   }
 
   // -------------------------------------------------------------------------

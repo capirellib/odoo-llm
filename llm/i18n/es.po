@@ -1,0 +1,143 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* llm
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-09 22:16+0000\n"
+"PO-Revision-Date: 2026-05-09 22:16+0000\n"
+"Last-Translator: Antigravity\n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: llm
+#: model:ir.model,name:llm.model_llm_provider
+msgid "LLM Provider"
+msgstr "Proveedor de LLM"
+
+#. module: llm
+#: model:ir.model,name:llm.model_llm_model
+msgid "LLM Model"
+msgstr "Modelo de LLM"
+
+#. module: llm
+#: model:ir.model,name:llm.model_llm_publisher
+msgid "LLM Publisher"
+msgstr "Editor de LLM"
+
+#. module: llm
+#: model:ir.actions.act_window,name:llm.llm_provider_action
+#: model:ir.ui.menu,name:llm.menu_llm_providers
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "LLM Providers"
+msgstr "Proveedores de LLM"
+
+#. module: llm
+#: model:ir.actions.act_window,name:llm.llm_model_action
+#: model:ir.ui.menu,name:llm.menu_llm_models
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_form
+msgid "LLM Models"
+msgstr "Modelos de LLM"
+
+#. module: llm
+#: model:ir.actions.act_window,name:llm.llm_publisher_action
+#: model:ir.ui.menu,name:llm.menu_llm_publishers
+msgid "LLM Publishers"
+msgstr "Editores de LLM"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "Fetch Models"
+msgstr "Obtener Modelos"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "Provider Name"
+msgstr "Nombre del Proveedor"
+
+#. module: llm
+#: field:llm.provider,service:0
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "Service"
+msgstr "Servicio"
+
+#. module: llm
+#: field:llm.provider,api_key:0
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "Api Key"
+msgstr "Clave API"
+
+#. module: llm
+#: field:llm.provider,api_base:0
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_provider_view_form
+msgid "Api Base"
+msgstr "Base de API"
+
+#. module: llm
+#: field:llm.model,model_use:0
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_form
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_tree
+msgid "Model Use"
+msgstr "Uso del Modelo"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Chat"
+msgstr "Chat"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Embedding"
+msgstr "Incrustación (Embedding)"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Completion"
+msgstr "Completado"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Multimodal"
+msgstr "Multimodal"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Generic binary generation"
+msgstr "Generación binaria genérica"
+
+#. module: llm
+#: selection:llm.model,model_use:0
+msgid "Image Generation"
+msgstr "Generación de Imágenes"
+
+#. module: llm
+#: field:llm.model,default:0
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_form
+msgid "Default"
+msgstr "Predeterminado"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_search
+msgid "Default Models"
+msgstr "Modelos Predeterminados"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_search
+msgid "Group By"
+msgstr "Agrupar Por"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_search
+msgid "Provider"
+msgstr "Proveedor"
+
+#. module: llm
+#: #: model_terms:ir.ui.view,arch_db:llm.llm_model_view_search
+msgid "Usage"
+msgstr "Uso"

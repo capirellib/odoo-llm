@@ -71,10 +71,12 @@ export class LLMChatClientAction extends Component {
    * @returns {String|null} Active ID or null
    */
   getActiveId(props) {
+    const context = props.action && props.action.context;
+    const params = props.action && props.action.params;
     return (
-      props.action.context?.active_id ??
-      props.action.params?.active_id ??
-      props.action.context?.default_active_id
+      (context && context.active_id) ||
+      (params && params.active_id) ||
+      (context && context.default_active_id)
     );
   }
 

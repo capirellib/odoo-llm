@@ -160,7 +160,7 @@
           name="requires_consent"
           domain="[('requires_user_consent', '=', True)]"
         />
-                <group string="Group By">
+                <group>
                     <filter
             string="Implementation"
             name="group_by_implementation"

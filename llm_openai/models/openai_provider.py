@@ -32,36 +32,43 @@ class LLMProvider(models.Model):
         return services + [("openai", "OpenAI")]
 
     def openai_get_client(self):
-        """Get OpenAI client instance"""
+        """
+        EN: Get OpenAI client instance.
+        ES: Obtener una instancia del cliente OpenAI.
+        """
         return OpenAI(api_key=self.api_key, base_url=self.api_base or None)
 
     def openai_normalize_prepend_messages(self, prepend_messages):
-        """Normalize prepend_messages for OpenAI format.
-
-        OpenAI accepts both string and list content formats,
-        so no transformation needed.
+        """
+        EN: Normalize prepend_messages for OpenAI format. OpenAI accepts both string and list content formats, so no transformation needed.
+        ES: Normalizar prepend_messages para el formato de OpenAI. OpenAI acepta formatos de contenido tanto de cadena como de lista, por lo que no es necesaria ninguna transformación.
 
         Args:
-            prepend_messages: List of message dicts to normalize
+            prepend_messages: List of message dicts to normalize / Lista de diccionarios de mensajes a normalizar
 
         Returns:
-            List of message dicts (unchanged)
+            List of message dicts (unchanged) / Lista de diccionarios de mensajes (sin cambios)
         """
         return prepend_messages or []
 
     # OpenAI specific implementation
     def openai_format_tools(self, tools):
-        """Format tools for OpenAI"""
+        """
+        EN: Format tools for OpenAI.
+        ES: Formatear herramientas para OpenAI.
+        """
         return [self._openai_format_tool(tool) for tool in tools]
 
     def _openai_format_tool(self, tool):
-        """Convert a tool to OpenAI format
+        """
+        EN: Convert a tool to OpenAI format.
+        ES: Convertir una herramienta al formato de OpenAI.
 
         Args:
-            tool: llm.tool record to convert
+            tool: llm.tool record to convert / Registro llm.tool a convertir
 
         Returns:
-            Dictionary in OpenAI tool format
+            Dictionary in OpenAI tool format / Diccionario en formato de herramienta OpenAI
         """
         try:
             if tool.input_schema:
@@ -92,7 +99,10 @@ class LLMProvider(models.Model):
             return self._create_openai_tool_from_schema(schema, tool)
 
     def _recursively_patch_schema_items(self, schema_node):
-        """Recursively ensure 'items' dictionaries have a 'type' defined."""
+        """
+        EN: Recursively ensure 'items' dictionaries have a 'type' defined.
+        ES: Asegurar recursivamente que los diccionarios 'items' tengan un 'tipo' definido.
+        """
         if not isinstance(schema_node, dict):
             return
 
@@ -112,14 +122,16 @@ class LLMProvider(models.Model):
                     self._recursively_patch_schema_items(sub_schema)
 
     def _create_openai_tool_from_schema(self, schema, tool):
-        """Convert a JSON schema dictionary to an OpenAI tool format,
-        patching missing item types recursively.
+        """
+        EN: Convert a JSON schema dictionary to an OpenAI tool format, patching missing item types recursively.
+        ES: Convertir un diccionario de esquema JSON a un formato de herramienta de OpenAI, parcheando los tipos de elementos que falten de forma recursiva.
+
         Args:
-            schema: JSON schema dictionary
-            tool: llm.tool record
+            schema: JSON schema dictionary / Diccionario de esquema JSON
+            tool: llm.tool record / Registro llm.tool
 
         Returns:
-            Dictionary in OpenAI tool format
+            Dictionary in OpenAI tool format / Diccionario en formato de herramienta OpenAI
         """
         if not schema:
             _logger.warning(
@@ -156,18 +168,20 @@ class LLMProvider(models.Model):
         prepend_messages=None,
         **kwargs,
     ):
-        """Send chat messages using OpenAI with tools support.
+        """
+        EN: Send chat messages using OpenAI with tools support.
+        ES: Enviar mensajes de chat usando OpenAI con soporte para herramientas.
 
         Args:
-            messages: mail.message recordset to send
-            model: Optional specific model to use
-            stream: Whether to stream the response
-            tools: llm.tool recordset of available tools
-            prepend_messages: List of pre-formatted message dicts to prepend
-            **kwargs: Additional OpenAI-specific parameters (e.g., tool_choice)
+            messages: mail.message recordset to send / Conjunto de registros mail.message a enviar
+            model: Optional specific model to use / Modelo específico opcional a usar
+            stream: Whether to stream the response / Si se debe transmitir la respuesta en flujo
+            tools: llm.tool recordset of available tools / Conjunto de registros llm.tool de herramientas disponibles
+            prepend_messages: List of pre-formatted message dicts to prepend / Lista de diccionarios de mensajes preformateados para anteponer
+            **kwargs: Additional OpenAI-specific parameters / Parámetros adicionales específicos de OpenAI
 
         Returns:
-            Generator yielding response chunks if streaming, else complete response
+            Generator yielding response chunks if streaming, else complete response / Generador que rinde fragmentos de respuesta si es en flujo, de lo contrario, la respuesta completa
         """
         model = self.get_model(model, "chat")
 
@@ -201,7 +215,10 @@ class LLMProvider(models.Model):
         return self._openai_process_streaming_response(response)
 
     def _openai_process_non_streaming_response(self, response):
-        """Processes OpenAI non-streamed response and returns ONE standardized dict."""
+        """
+        EN: Processes OpenAI non-streamed response and returns ONE standardized dict.
+        ES: Procesa la respuesta de OpenAI no transmitida en flujo y devuelve UN diccionario estandarizado.
+        """
         _logger.info("Processing non-streaming OpenAI response.")
         try:
             choice = response.choices[0]
@@ -237,8 +254,8 @@ class LLMProvider(models.Model):
 
     def _openai_process_streaming_response(self, response_stream):
         """
-        Processes OpenAI stream and yields standardized dicts for start_thread_loop.
-        Yields: {'content': str} OR {'tool_calls': list} OR {'error': str}
+        EN: Processes OpenAI stream and yields standardized dicts for start_thread_loop. Yields: {'content': str} OR {'tool_calls': list} OR {'error': str}
+        ES: Procesa el flujo de OpenAI y rinde diccionarios estandarizados para start_thread_loop. Rinde: {'content': str} O {'tool_calls': list} O {'error': str}
         """
         assembled_tool_calls = {}
         final_tool_calls_list = []
@@ -316,8 +333,8 @@ class LLMProvider(models.Model):
 
     def _update_openai_tool_call_chunk(self, tool_call_chunks, tool_call_chunk, index):
         """
-        Helper to assemble fragmented tool calls from OpenAI stream chunks.
-        (Keep this helper as it's essential for stream processing)
+        EN: Helper to assemble fragmented tool calls from OpenAI stream chunks.
+        ES: Ayudante para ensamblar llamadas de herramientas fragmentadas de los fragmentos del flujo de OpenAI.
         """
         if index not in tool_call_chunks:
             tool_call_chunks[index] = {
@@ -350,21 +367,44 @@ class LLMProvider(models.Model):
         return tool_call_chunks
 
     def openai_embedding(self, texts, model=None):
-        """Generate embeddings using OpenAI"""
+        """
+        EN: Generate embeddings using OpenAI.
+        ES: Generar incrustaciones (embeddings) usando OpenAI.
+        """
         model = self.get_model(model, "embedding")
 
         response = self.client.embeddings.create(model=model.name, input=texts)
         return [r.embedding for r in response.data]
 
     def openai_models(self, model_id=None):
-        """List available OpenAI models"""
-        if model_id:
-            model = self.client.models.retrieve(model_id)
-            yield self._openai_parse_model(model)
-        else:
-            models = self.client.models.list()
-            for model in models.data:
+        """
+        EN: List available OpenAI models.
+        ES: Listar modelos de OpenAI disponibles.
+        """
+        try:
+            if model_id:
+                model = self.client.models.retrieve(model_id)
                 yield self._openai_parse_model(model)
+            else:
+                models = self.client.models.list()
+                for model in models.data:
+                    yield self._openai_parse_model(model)
+        except Exception as e:
+            # If it's a 404 error, it's likely a configuration issue with the Base URL
+            if "NotFoundError" in str(type(e)) or (
+                hasattr(e, "status_code") and e.status_code == 404
+            ):
+                raise Exception(
+                    "EN: The model listing endpoint was not found (404). "
+                    "This often means the 'Base URL' is incorrect for this provider. "
+                    "If you are using an OpenAI-compatible service, ensure the URL includes "
+                    "the correct suffix (e.g., 'https://api.yourprovider.com/v1').\n"
+                    "ES: El endpoint de listado de modelos no fue encontrado (404). "
+                    "Esto a menudo significa que la 'URL Base' es incorrecta para este proveedor. "
+                    "Si está utilizando un servicio compatible con OpenAI, asegúrese de que "
+                    "la URL incluya el sufijo correcto (ej: 'https://api.suproveedor.com/v1').",
+                ) from e
+            raise e
 
     # OpenAI API doesn't expose capabilities - use pattern matching
     OPENAI_VISION_PATTERNS = (
@@ -420,15 +460,17 @@ class LLMProvider(models.Model):
         return validator.validate_and_clean()
 
     def openai_format_messages(self, messages, system_prompt=None, model=None):
-        """Format messages for OpenAI API
+        """
+        EN: Format messages for OpenAI API.
+        ES: Formatear mensajes para la API de OpenAI.
 
         Args:
-            messages: mail.message recordset to format
-            system_prompt: Optional system prompt (deprecated, use prepend_messages)
-            model: llm.model record (to determine if multimodal)
+            messages: mail.message recordset to format / Conjunto de registros mail.message a formatear
+            system_prompt: Optional system prompt / Indicación del sistema opcional
+            model: llm.model record / Registro llm.model
 
         Returns:
-            List of formatted messages in OpenAI-compatible format
+            List of formatted messages in OpenAI-compatible format / Lista de mensajes formateados en formato compatible con OpenAI
         """
         is_multimodal = model and model.model_use == "multimodal"
         formatted_messages = []
@@ -450,7 +492,10 @@ class LLMProvider(models.Model):
         return result_messages
 
     def openai_upload_file(self, file_tuple, purpose="fine-tune"):
-        """Upload a file to OpenAI"""
+        """
+        EN: Upload a file to OpenAI.
+        ES: Subir un archivo a OpenAI.
+        """
         response = self.client.files.create(file=file_tuple, purpose=purpose)
         return response
 
@@ -460,7 +505,10 @@ class LLMProvider(models.Model):
         model_name,
         hyperparameters=None,
     ):
-        """Create an OpenAI fine-tuning job."""
+        """
+        EN: Create an OpenAI fine-tuning job.
+        ES: Crear un trabajo de ajuste fino (fine-tuning) en OpenAI.
+        """
         self.ensure_one()
 
         hyperparameters = hyperparameters or {}
@@ -480,19 +528,28 @@ class LLMProvider(models.Model):
         return response
 
     def openai_retrieve_training_job(self, job_id):
-        """Retrieve an OpenAI fine-tuning job."""
+        """
+        EN: Retrieve an OpenAI fine-tuning job.
+        ES: Recuperar un trabajo de ajuste fino (fine-tuning) de OpenAI.
+        """
         self.ensure_one()
         response = self.client.fine_tuning.jobs.retrieve(job_id)
         return response
 
     def openai_cancel_training_job(self, job_id):
-        """Cancel an OpenAI fine-tuning job."""
+        """
+        EN: Cancel an OpenAI fine-tuning job.
+        ES: Cancelar un trabajo de ajuste fino (fine-tuning) de OpenAI.
+        """
         self.ensure_one()
         response = self.client.fine_tuning.jobs.cancel(job_id)
         return response
 
     def openai_validate_datasets(self, job):
-        """Validate datasets for training"""
+        """
+        EN: Validate datasets for training.
+        ES: Validar conjuntos de datos para el entrenamiento.
+        """
         if not job.dataset_ids:
             raise UserError(
                 f"Job '{job.name}': Please select at least one dataset before validating.",
@@ -508,7 +565,10 @@ class LLMProvider(models.Model):
         return True
 
     def openai_start_training_job(self, job):
-        """Start a training job with the provider."""
+        """
+        EN: Start a training job with the provider.
+        ES: Iniciar un trabajo de entrenamiento con el proveedor.
+        """
         self.ensure_one()
 
         if not job.dataset_ids:
@@ -548,7 +608,10 @@ class LLMProvider(models.Model):
 
     @api.model
     def _openai_get_combined_content_bytes(self, job):
-        """Get combined content bytes for OpenAI"""
+        """
+        EN: Get combined content bytes for OpenAI training.
+        ES: Obtener bytes de contenido combinados para el entrenamiento de OpenAI.
+        """
         all_datasets_bytes = []
         dataset_names = []
         for dataset in job.dataset_ids:
@@ -576,7 +639,10 @@ class LLMProvider(models.Model):
         return final_combined_bytes
 
     def openai_check_training_job_status(self, job):
-        """Check the status of a training job with the provider."""
+        """
+        EN: Check the status of a training job with the provider.
+        ES: Comprobar el estado de un trabajo de entrenamiento con el proveedor.
+        """
         self.ensure_one()
         response = job.provider_id.retrieve_training_job(job_id=job.external_job_id)
         state_to_return = OPENAI_TO_ODOO_STATE_MAPPING.get(response.status)

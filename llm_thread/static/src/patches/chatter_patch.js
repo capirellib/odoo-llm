@@ -71,10 +71,13 @@ patch(Chatter.prototype, {
     this.state.llmThreadId = pending.threadId;
 
     // Set the LLM thread as the active discuss thread
-    const llmThread = this.store.Thread.insert({
-      model: "llm.thread",
-      id: pending.threadId,
+    // Create/Update thread in store using standard insert
+    this.store.insert({
+      "mail.thread": [{ model: "llm.thread", id: pending.threadId }],
     });
+    const llmThread = Object.values(this.store.Thread.records || {}).find(
+      (t) => t.model === "llm.thread" && t.id === pending.threadId
+    );
 
     // Initialize discuss if needed and set thread
     if (!this.store.discuss) {
@@ -82,8 +85,11 @@ patch(Chatter.prototype, {
     }
     this.store.discuss.thread = llmThread;
 
-    // Fetch thread data
-    await llmThread.fetchData(["messages"]);
+    // Fetch thread data using Odoo 19 pattern
+    const storeData = await this.orm.call("llm.thread", "to_store_format", [
+      pending.threadId,
+    ]);
+    this.store.insert(storeData);
 
     // Open AI chat mode
     this.state.isChattingWithLLM = true;
@@ -102,7 +108,7 @@ patch(Chatter.prototype, {
     // Wait for OWL rendering to complete (Odoo pattern)
     requestAnimationFrame(() => {
       // Step 1: Scroll the chatter into view (form view scroll)
-      const chatterEl = this.rootRef?.el;
+      const chatterEl = this.rootRef && this.rootRef.el;
       if (chatterEl) {
         chatterEl.scrollIntoView({
           behavior: "smooth",
@@ -163,10 +169,13 @@ patch(Chatter.prototype, {
         const threadId = await this.ensureLLMThread();
         if (threadId) {
           // Set the LLM thread as the active discuss thread
-          const llmThread = this.store.Thread.insert({
-            model: "llm.thread",
-            id: threadId,
+          // Create/Update thread in store using standard insert
+          this.store.insert({
+            "mail.thread": [{ model: "llm.thread", id: threadId }],
           });
+          const llmThread = Object.values(this.store.Thread.records || {}).find(
+            (t) => t.model === "llm.thread" && t.id === threadId
+          );
 
           // Initialize discuss if needed and set thread
           if (!this.store.discuss) {
@@ -174,8 +183,13 @@ patch(Chatter.prototype, {
           }
           this.store.discuss.thread = llmThread;
 
-          // Fetch thread data
-          await llmThread.fetchData(["messages"]);
+          // Fetch thread data using Odoo 19 pattern
+          const storeData = await this.orm.call(
+            "llm.thread",
+            "to_store_format",
+            [threadId]
+          );
+          this.store.insert(storeData);
 
           this.state.isChattingWithLLM = true;
           this.state.llmThreadId = threadId;

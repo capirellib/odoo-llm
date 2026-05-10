@@ -120,7 +120,7 @@ export class JsonEditorComponent extends Component {
         }
 
         // Handle validation errors
-        if (errors?.length > 0) {
+        if (errors && errors.length > 0) {
           if (this.props.onValidationError) {
             this.props.onValidationError(errors);
           }
@@ -150,7 +150,7 @@ export class JsonEditorComponent extends Component {
       })
       .catch((e) => {
         // Handle all promise rejections
-        const textValue = this.editor?.getText?.() || "";
+        const textValue = (this.editor && this.editor.getText && this.editor.getText()) || "";
         this.props.onChange({
           value: textValue,
           isValid: false,

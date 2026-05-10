@@ -37,14 +37,15 @@ export class LLMThreadHeader extends Component {
    * Get the active thread
    */
   get activeThread() {
-    return this.mailStore.discuss?.thread;
+    const thread = this.mailStore.discuss && this.mailStore.discuss.thread;
+    return thread;
   }
 
   /**
    * Check if we have an active LLM thread
    */
   get hasActiveThread() {
-    return this.activeThread?.model === "llm.thread";
+    return this.activeThread && this.activeThread.model === "llm.thread";
   }
 
   /**
@@ -55,12 +56,13 @@ export class LLMThreadHeader extends Component {
 
     // Get provider_id from the thread data (now stored in mailStore)
     const providerId =
-      this.activeThread.provider_id?.id || this.activeThread.provider_id;
+      (this.activeThread.provider_id && this.activeThread.provider_id.id) ||
+      this.activeThread.provider_id;
     if (!providerId) return null;
 
     // Return provider from our Map or directly from thread if available
     return (
-      this.llmStore.llmProviders?.get(providerId) ||
+      (this.llmStore.llmProviders && this.llmStore.llmProviders.get(providerId)) ||
       this.activeThread.provider_id
     );
   }
@@ -73,11 +75,15 @@ export class LLMThreadHeader extends Component {
 
     // Get model_id from the thread data (now stored in mailStore)
     const modelId =
-      this.activeThread.model_id?.id || this.activeThread.model_id;
+      (this.activeThread.model_id && this.activeThread.model_id.id) ||
+      this.activeThread.model_id;
     if (!modelId) return null;
 
     // Return model from our Map or directly from thread if available
-    return this.llmStore.llmModels?.get(modelId) || this.activeThread.model_id;
+    return (
+      (this.llmStore.llmModels && this.llmStore.llmModels.get(modelId)) ||
+      this.activeThread.model_id
+    );
   }
 
   /**
@@ -126,9 +132,12 @@ export class LLMThreadHeader extends Component {
     return toolIds
       .map((tool) => {
         if (typeof tool === "object" && tool.id) {
-          return this.llmStore.llmTools?.get(tool.id) || tool;
+          return (
+            (this.llmStore.llmTools && this.llmStore.llmTools.get(tool.id)) ||
+            tool
+          );
         }
-        return this.llmStore.llmTools?.get(tool);
+        return this.llmStore.llmTools && this.llmStore.llmTools.get(tool);
       })
       .filter(Boolean);
   }
@@ -179,8 +188,11 @@ export class LLMThreadHeader extends Component {
         name: this.state.pendingName.trim(),
       });
 
-      // Reload thread data using proper fetchData pattern
-      await this.activeThread.fetchData(["name"]);
+      // Reload thread data using Odoo 19 pattern
+      const storeData = await this.orm.call("llm.thread", "to_store_format", [
+        this.activeThread.id,
+      ]);
+      this.mailStore.insert(storeData);
 
       this.state.isEditingName = false;
       this.state.pendingName = "";
@@ -226,7 +238,8 @@ export class LLMThreadHeader extends Component {
    * @param {Object} provider - Provider object to select
    */
   async selectProvider(provider) {
-    if (provider.id === this.currentProvider?.id) return;
+    if (provider.id === (this.currentProvider && this.currentProvider.id))
+      return;
 
     try {
       this.state.isLoadingUpdate = true;
@@ -248,8 +261,11 @@ export class LLMThreadHeader extends Component {
       // Update via ORM
       await this.orm.write("llm.thread", [this.activeThread.id], updateData);
 
-      // Reload thread data using proper fetchData pattern
-      await this.activeThread.fetchData(["provider_id", "model_id"]);
+      // Reload thread data using Odoo 19 pattern
+      const storeData = await this.orm.call("llm.thread", "to_store_format", [
+        this.activeThread.id,
+      ]);
+      this.mailStore.insert(storeData);
     } catch (error) {
       this.notification.add(
         _t("Could not change the AI provider. Please try again."),
@@ -270,7 +286,7 @@ export class LLMThreadHeader extends Component {
    * @param {Object} model - Model object to select
    */
   async selectModel(model) {
-    if (model.id === this.currentModel?.id) return;
+    if (model.id === (this.currentModel && this.currentModel.id)) return;
 
     try {
       this.state.isLoadingUpdate = true;
@@ -280,8 +296,11 @@ export class LLMThreadHeader extends Component {
         model_id: model.id,
       });
 
-      // Reload thread data using proper fetchData pattern
-      await this.activeThread.fetchData(["model_id"]);
+      // Reload thread data using Odoo 19 pattern
+      const storeData = await this.orm.call("llm.thread", "to_store_format", [
+        this.activeThread.id,
+      ]);
+      this.mailStore.insert(storeData);
 
       // Clear search
       this.state.modelSearchQuery = "";
@@ -340,8 +359,11 @@ export class LLMThreadHeader extends Component {
       // Immediately update local state to ensure UI reflects change
       this.activeThread.tool_ids = newToolIds;
 
-      // Reload thread data using proper fetchData pattern
-      await this.activeThread.fetchData(["tool_ids"]);
+      // Reload thread data using Odoo 19 pattern
+      const storeData = await this.orm.call("llm.thread", "to_store_format", [
+        this.activeThread.id,
+      ]);
+      this.mailStore.insert(storeData);
     } catch (error) {
       this.notification.add(
         _t("Could not update the enabled tools. Please try again."),

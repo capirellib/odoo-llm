@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
              <!-- String updated for clarity -->
             <form string="Upload RAG Resources">
-                <field name="state" invisible="1" />
+                <field name="state" column_invisible="True" />
                 <sheet>
                     <div invisible="state != 'confirm'">
                         <div class="alert alert-info" role="alert">

@@ -32,8 +32,8 @@ patch(Thread.prototype, {
    */
   _updateActionContext(activeId) {
     if (
-      !this.store?.action_discuss_id ||
-      !this.store.env?.services?.action?.currentController?.action
+      !this.store.action_discuss_id ||
+      !this.store.env.services.action.currentController.action
     ) {
       return;
     }

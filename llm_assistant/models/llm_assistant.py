@@ -168,7 +168,10 @@ class LLMAssistant(models.Model):
 
     @api.depends("prompt_id", "default_values")
     def _compute_system_prompt_preview(self):
-        """Compute preview of the formatted system prompt"""
+        """
+        EN: Compute preview of the formatted system prompt.
+        ES: Calcular la vista previa de la indicación (prompt) del sistema formateada.
+        """
         for assistant in self:
             try:
                 if assistant.prompt_id:
@@ -209,12 +212,18 @@ class LLMAssistant(models.Model):
 
     @api.depends("thread_ids")
     def _compute_thread_count(self):
-        """Compute the number of threads using this assistant"""
+        """
+        EN: Compute the number of threads using this assistant.
+        ES: Calcular el número de hilos que utilizan este asistente.
+        """
         for assistant in self:
             assistant.thread_count = len(assistant.thread_ids)
 
     def action_view_prompt(self):
-        """Open the associated prompt for advanced template management"""
+        """
+        EN: Open the associated prompt for advanced template management.
+        ES: Abrir la indicación (prompt) asociada para la gestión avanzada de plantillas.
+        """
         self.ensure_one()
         if not self.prompt_id:
             return False
@@ -229,7 +238,10 @@ class LLMAssistant(models.Model):
         }
 
     def action_view_threads(self):
-        """Open the threads using this assistant"""
+        """
+        EN: Open the threads using this assistant.
+        ES: Abrir los hilos que utilizan este asistente.
+        """
         self.ensure_one()
         action = self.env["ir.actions.actions"]._for_xml_id(
             "llm_thread.llm_thread_action"
@@ -240,14 +252,14 @@ class LLMAssistant(models.Model):
 
     def _generate_template_json_from_schema(self, args_schema):
         """
-        Generate a template JSON structure from the prompt's argument schema.
-        Creates placeholders for all arguments, using defaults when available.
+        EN: Generate a template JSON structure from the prompt's argument schema. Creates placeholders for all arguments, using defaults when available.
+        ES: Generar una estructura JSON de plantilla a partir del esquema de argumentos de la indicación (prompt). Crea marcadores de posición para todos los argumentos, utilizando valores predeterminados cuando están disponibles.
 
         Args:
-            args_schema (dict): The arguments schema from the prompt
+            args_schema (dict): The arguments schema from the prompt / El esquema de argumentos de la indicación (prompt)
 
         Returns:
-            dict: Template values with placeholders or defaults
+            dict: Template values with placeholders or defaults / Valores de plantilla con marcadores de posición o valores predeterminados
         """
         template_values = {}
 
@@ -278,7 +290,10 @@ class LLMAssistant(models.Model):
         return template_values
 
     def action_reset_defaults(self):
-        """Reset default values to create template JSON from prompt's arguments schema"""
+        """
+        EN: Reset default values to create template JSON from prompt's arguments schema.
+        ES: Restablecer los valores predeterminados para crear el JSON de la plantilla a partir del esquema de argumentos de la indicación (prompt).
+        """
         self.ensure_one()
 
         if not self.prompt_id:
@@ -367,14 +382,14 @@ class LLMAssistant(models.Model):
 
     def get_evaluated_default_values(self, context):
         """
-        Evaluate default values using the provided context.
-        This is used by llm.thread to get assistant's default values with thread context.
+        EN: Evaluate default values using the provided context. This is used by llm.thread to get assistant's default values with thread context.
+        ES: Evaluar los valores predeterminados utilizando el contexto proporcionado. Esto es utilizado por llm.thread para obtener los valores predeterminados del asistente con el contexto del hilo.
 
         Args:
-            context (dict): Context for template rendering
+            context (dict): Context for template rendering / Contexto para la renderización de la plantilla
 
         Returns:
-            dict: Evaluated default values
+            dict: Evaluated default values / Valores predeterminados evaluados
         """
         self.ensure_one()
 
@@ -417,7 +432,10 @@ class LLMAssistant(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Override create to ensure default_values is valid JSON"""
+        """
+        EN: Override create to ensure default_values is valid JSON.
+        ES: Sobrescribir create para asegurar que default_values sea un JSON válido.
+        """
         for vals in vals_list:
             if "default_values" in vals and vals["default_values"]:
                 try:
@@ -428,9 +446,9 @@ class LLMAssistant(models.Model):
 
     @api.onchange("prompt_id")
     def _onchange_prompt_id(self):
-        """Update default_values when prompt_id changes to create template JSON
-
-        ONLY triggers when prompt_id actually changes, not on every field change.
+        """
+        EN: Update default_values when prompt_id changes to create template JSON.
+        ES: Actualizar default_values cuando cambia prompt_id para crear el JSON de la plantilla.
         """
         # Only proceed if we have a prompt_id and this is actually a change in prompt_id
         if not self.prompt_id:
@@ -458,20 +476,23 @@ class LLMAssistant(models.Model):
             self.default_values = "{}"
 
     def _get_json_fields(self):
-        """Return fields that should be serialized as JSON in the API"""
+        """
+        EN: Return fields that should be serialized as JSON in the API.
+        ES: Devolver los campos que deben serializarse como JSON en la API.
+        """
         return ["default_values"]
 
     @api.model
     def get_assistant_by_id(self, assistant_id):
-        """Get an assistant record by its ID
+        """
+        EN: Get an assistant record by its ID.
+        ES: Obtener un registro de asistente por su ID.
 
         Args:
-            assistant_id (int): ID of the assistant
+            assistant_id (int): ID of the assistant / ID del asistente
 
         Returns:
-            tuple: (assistant, error_response)
-                  If successful, error_response will be None
-                  If error, assistant will be None
+            tuple: (assistant, error_response) / (asistente, respuesta_error)
         """
         if not assistant_id:
             return None, None
@@ -482,14 +503,16 @@ class LLMAssistant(models.Model):
         return assistant, None
 
     def get_assistant_values(self, thread, include_prompt=True):
-        """Get thread-specific evaluated default values for this assistant
+        """
+        EN: Get thread-specific evaluated default values for this assistant.
+        ES: Obtener valores predeterminados evaluados específicos del hilo para este asistente.
 
         Args:
-            thread (llm.thread): Thread record
-            include_prompt (bool): Whether to include prompt data
+            thread (llm.thread): Thread record / Registro del hilo
+            include_prompt (bool): Whether to include prompt data / Si se debe incluir la información de la indicación (prompt)
 
         Returns:
-            dict: Result with evaluated default values and prompt data
+            dict: Result with evaluated default values and prompt data / Resultado con valores predeterminados evaluados y datos de la indicación (prompt)
         """
         self.ensure_one()
 
@@ -519,7 +542,10 @@ class LLMAssistant(models.Model):
         return result
 
     def _get_allowed_assistants_for_user(self, user=None):
-        """Get assistants that the current user can access"""
+        """
+        EN: Get assistants that the current user can access.
+        ES: Obtener asistentes a los que el usuario actual puede acceder.
+        """
         if not user:
             user = self.env.user
 
@@ -542,5 +568,8 @@ class LLMAssistant(models.Model):
 
     @api.model
     def get_assistant_by_code(self, code):
-        """Get assistant by code"""
+        """
+        EN: Get assistant by code.
+        ES: Obtener asistente por código.
+        """
         return self.search([("code", "=", code)], limit=1)

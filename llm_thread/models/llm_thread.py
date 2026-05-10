@@ -217,7 +217,6 @@ class LLMThread(models.Model):
     # MESSAGE POST OVERRIDES - Clean integration with mail.thread
     # ============================================================================
 
-    @api.returns("mail.message", lambda value: value.id)
     def message_post(
         self,
         *,
@@ -654,9 +653,12 @@ class LLMThread(models.Model):
     # STORE INTEGRATION - For mail.store compatibility
     # ============================================================================
 
-    def _thread_to_store(self, store, **kwargs):
-        """Extend base _thread_to_store to include LLM-specific fields."""
-        super()._thread_to_store(store, **kwargs)
+    def _thread_to_store(self, store, fields, **kwargs):
+        """
+        EN: Extend base _thread_to_store to include LLM-specific fields.
+        ES: Extender el _thread_to_store base para incluir campos específicos de LLM.
+        """
+        super()._thread_to_store(store, fields, **kwargs)
 
         # Add LLM-specific thread data
         for thread in self:
@@ -697,7 +699,33 @@ class LLMThread(models.Model):
                     for tool in thread.tool_ids
                 ]
 
-            store.add("mail.thread", thread_data)
+            # Use mail.thread model for the store to ensure JS pick it up in Thread collection
+            store.add(thread, thread_data)
+
+    def _finalize_store(self, store):
+        """
+        EN: Finalize store data by remapping llm.thread to mail.thread for Odoo 19 JS.
+        ES: Finalizar los datos del almacén remapeando llm.thread a mail.thread para Odoo 19 JS.
+        """
+        result = store.get_result()
+        if "llm.thread" in result:
+            threads = result.pop("llm.thread")
+            if "mail.thread" not in result:
+                result["mail.thread"] = []
+            result["mail.thread"].extend(threads)
+        return result
+
+    def to_store_format(self):
+        """
+        EN: Convert thread to store format compatible with Odoo 19.
+        ES: Convertir el hilo al formato de almacén compatible con Odoo 19.
+        """
+        self.ensure_one()
+        from odoo.addons.mail.tools.discuss import Store
+
+        store = Store()
+        self._thread_to_store(store, None)
+        return self._finalize_store(store)
 
     @api.ondelete(at_uninstall=False)
     def _unlink_llm_thread(self):

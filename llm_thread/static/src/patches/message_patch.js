@@ -23,14 +23,14 @@ patch(Message.prototype, {
    * Check if this message is in an LLM thread
    */
   get isLLMMessage() {
-    return this.props.message?.model === "llm.thread";
+    return this.props.message && this.props.message.model === "llm.thread";
   },
 
   /**
    * Get LLM role for this message
    */
   get llmRole() {
-    return this.props.message?.llm_role;
+    return this.props.message && this.props.message.llm_role;
   },
 
   /**
@@ -47,7 +47,10 @@ patch(Message.prototype, {
     return (
       this.isLLMMessage &&
       this.llmRole === "assistant" &&
-      this.props.message?.body_json?.tool_calls?.length > 0
+      this.props.message &&
+      this.props.message.body_json &&
+      this.props.message.body_json.tool_calls &&
+      this.props.message.body_json.tool_calls.length > 0
     );
   },
 
@@ -65,7 +68,7 @@ patch(Message.prototype, {
       }
 
       // Add streaming class for assistant messages that are still being generated
-      if (this.llmRole === "assistant" && this.props.message?.isPending) {
+      if (this.llmRole === "assistant" && this.props.message && this.props.message.isPending) {
         className += " o-llm-message-streaming";
       }
     }
@@ -91,7 +94,9 @@ patch(MessageModel.prototype, {
       // Assistant messages with tool calls are never empty
       if (
         this.llm_role === "assistant" &&
-        this.body_json?.tool_calls?.length > 0
+        this.body_json &&
+        this.body_json.tool_calls &&
+        this.body_json.tool_calls.length > 0
       ) {
         return false;
       }

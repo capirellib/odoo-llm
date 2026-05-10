@@ -18,12 +18,13 @@ patch(LLMChatContainer.prototype, {
    * @returns {Boolean}
    */
   isMediaGenerationModel(thread) {
-    if (!thread?.id || !this.llmStore) {
+    if (!thread || !thread.id || !this.llmStore) {
       return false;
     }
 
     // Get model info from llmStore
-    const modelId = thread.model_id?.id || thread.model_id;
+    const modelId =
+      (thread.model_id && thread.model_id.id) || thread.model_id;
     if (!modelId) {
       return false;
     }

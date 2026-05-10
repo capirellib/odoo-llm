@@ -155,7 +155,7 @@
 
                         <notebook>
                             <page string="Jobs" name="jobs">
-                                <field name="model_id" invisible="1" />
+                                <field name="model_id" column_invisible="True" />
                                 <!-- Jobs will be shown via a separate action -->
                                 <group>
                                     <button
@@ -225,7 +225,7 @@
           domain="[('last_processed_at', '!=', False)]"
         />
 
-                    <group string="Group By">
+                    <group>
                         <filter
             string="Model"
             name="group_by_model"

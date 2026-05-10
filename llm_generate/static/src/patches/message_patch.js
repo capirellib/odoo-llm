@@ -14,9 +14,10 @@ patch(Message.prototype, {
   get isLLMUserGenerationMessage() {
     const message = this.props.message;
     return (
-      message?.model === "llm.thread" &&
-      message?.llm_role === "user" &&
-      message?.body_json &&
+      message &&
+      message.model === "llm.thread" &&
+      message.llm_role === "user" &&
+      message.body_json &&
       Object.keys(message.body_json).length > 0
     );
   },
@@ -29,11 +30,12 @@ patch(Message.prototype, {
     const message = this.props.message;
     // Exclude tool calls from generation output display
     return (
-      message?.model === "llm.thread" &&
-      message?.llm_role === "assistant" &&
-      message?.body_json &&
+      message &&
+      message.model === "llm.thread" &&
+      message.llm_role === "assistant" &&
+      message.body_json &&
       Object.keys(message.body_json).length > 0 &&
-      !message?.body_json?.tool_calls
+      !(message.body_json && message.body_json.tool_calls)
     );
   },
 
@@ -42,7 +44,7 @@ patch(Message.prototype, {
    */
   get generationDataFormatted() {
     const message = this.props.message;
-    if (!message?.body_json) {
+    if (!message || !message.body_json) {
       return "";
     }
 
@@ -59,7 +61,7 @@ patch(Message.prototype, {
    */
   get generationOutputFormatted() {
     const message = this.props.message;
-    if (!message?.body_json) {
+    if (!message || !message.body_json) {
       return "";
     }
 

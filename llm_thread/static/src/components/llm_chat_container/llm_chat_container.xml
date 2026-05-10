@@ -54,7 +54,7 @@
           >
                         <div
               class="o-llm-thread-item p-3 border-bottom cursor-pointer"
-              t-att-class="{ 'o-llm-thread-active': thread.id === activeThread?.id }"
+              t-att-class="{ 'o-llm-thread-active': activeThread and thread.id === activeThread.id }"
               t-on-click.stop.prevent="() => this.selectThread(thread.id)"
               t-att-title="thread.name"
             >
@@ -154,7 +154,7 @@
           >
                         <div
               class="o-llm-thread-item p-3 border-bottom cursor-pointer"
-              t-att-class="{ 'o-llm-thread-active': thread.id === activeThread?.id }"
+              t-att-class="{ 'o-llm-thread-active': activeThread and thread.id === activeThread.id }"
               t-on-click.stop.prevent="() => this.selectThread(thread.id)"
               t-att-title="thread.name"
             >

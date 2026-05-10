@@ -52,8 +52,8 @@ export class LLMMediaForm extends Component {
       },
       () => [
         this.props.threadId,
-        this.thread?.model_id,
-        this.thread?.assistant_id,
+        this.thread && this.thread.model_id,
+        this.thread && this.thread.assistant_id,
       ]
     );
 
@@ -63,8 +63,8 @@ export class LLMMediaForm extends Component {
         this._computeSchemaSource();
       },
       () => [
-        this.thread?.prompt_id,
-        this.thread?.assistant_id,
+        this.thread && this.thread.prompt_id,
+        this.thread && this.thread.assistant_id,
         this.state.threadConfig.input_schema,
         this.llmModel,
       ]
@@ -80,7 +80,9 @@ export class LLMMediaForm extends Component {
   }
 
   get llmModel() {
-    const modelId = this.thread?.model_id?.id || this.thread?.model_id;
+    const modelId =
+      (this.thread && this.thread.model_id && this.thread.model_id.id) ||
+      (this.thread && this.thread.model_id);
     if (!modelId) return null;
 
     return this.llmStore.llmModels.get(modelId);
@@ -88,7 +90,7 @@ export class LLMMediaForm extends Component {
 
   get composer() {
     // Get composer from thread
-    return this.thread?.composer;
+    return this.thread && this.thread.composer;
   }
 
   /**
@@ -146,11 +148,14 @@ export class LLMMediaForm extends Component {
 
     // If no thread config schema, try model's schema
     if (!schema || Object.keys(schema).length === 0) {
-      schema = this.llmModel?.inputSchema;
+      schema = this.llmModel && this.llmModel.inputSchema;
     }
 
     if (!schema || typeof schema !== "object") {
-      console.warn("No input schema found for model:", this.llmModel?.name);
+      console.warn(
+        "No input schema found for model:",
+        this.llmModel && this.llmModel.name
+      );
       // Return empty object instead of null
       return {};
     }
@@ -233,7 +238,7 @@ export class LLMMediaForm extends Component {
 
     const inputSchema = this.inputSchema;
 
-    if (!inputSchema?.properties) {
+    if (!inputSchema || !inputSchema.properties) {
       return [];
     }
 
@@ -252,7 +257,11 @@ export class LLMMediaForm extends Component {
         let choices = null;
         let fieldType = fieldDef.type;
 
-        if (fieldDef.allOf?.[0]?.enum) {
+        if (
+          fieldDef.allOf &&
+          fieldDef.allOf[0] &&
+          fieldDef.allOf[0].enum
+        ) {
           choices = fieldDef.allOf[0].enum.map((item) => ({
             value: item,
             label: typeof item === "object" ? item.label || item.value : item,
@@ -279,7 +288,8 @@ export class LLMMediaForm extends Component {
           minimum: fieldDef.minimum,
           maximum: fieldDef.maximum,
           format: fieldDef.format,
-          order: fieldDef["x-order"] ?? 999,
+          order:
+            fieldDef["x-order"] !== undefined ? fieldDef["x-order"] : 999,
         };
       })
       .sort((a, b) => a.order - b.order);
@@ -303,7 +313,7 @@ export class LLMMediaForm extends Component {
     }
 
     // Check if thread has a prompt_id - if so, schema is from prompt
-    const hasPrompt = Boolean(this.thread?.prompt_id);
+    const hasPrompt = Boolean(this.thread && this.thread.prompt_id);
     const hasSchema =
       this.state.threadConfig.input_schema &&
       Object.keys(this.state.threadConfig.input_schema).length > 0;
@@ -313,13 +323,17 @@ export class LLMMediaForm extends Component {
         // Schema exists AND prompt is set -> schema is from prompt
         this.state.schemaSource = {
           type: "prompt",
-          name: this.thread?.prompt_id?.name || _t("Selected Prompt"),
+          name:
+            (this.thread &&
+              this.thread.prompt_id &&
+              this.thread.prompt_id.name) ||
+            _t("Selected Prompt"),
         };
       } else {
         // Schema exists but NO prompt -> schema must be from model
         this.state.schemaSource = {
           type: "model",
-          name: this.llmModel?.name || _t("Model Default"),
+          name: (this.llmModel && this.llmModel.name) || _t("Model Default"),
         };
       }
       return;
@@ -455,7 +469,7 @@ export class LLMMediaForm extends Component {
    * @param {Array} errors - Validation errors from JSON schema
    */
   onJsonValidationError(errors) {
-    if (errors?.length > 0) {
+    if (errors && errors.length > 0) {
       const formattedErrors = errors.map((error) => {
         const path = error.path ? error.path.join(".") : "";
         return `${path ? path + ": " : ""}${error.message}`;
@@ -504,7 +518,7 @@ export class LLMMediaForm extends Component {
       value = target.checked;
     } else if (target.type === "number" || target.type === "range") {
       value = parseFloat(target.value);
-    } else if (fieldDef?.type === "integer") {
+    } else if (fieldDef && fieldDef.type === "integer") {
       value = parseInt(target.value, 10);
     } else {
       value = target.value;
@@ -626,7 +640,7 @@ export class LLMMediaForm extends Component {
     }
 
     // Check if model supports generation
-    const modelUse = this.llmModel?.model_use;
+    const modelUse = this.llmModel && this.llmModel.model_use;
     if (modelUse !== "generation" && modelUse !== "image_generation") {
       this.state.error = "Selected model is not configured for generation.";
       return;

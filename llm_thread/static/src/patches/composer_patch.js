@@ -30,7 +30,11 @@ patch(Composer.prototype, {
    * This is our safety check to ensure we only modify LLM-related behavior
    */
   get isLLMThread() {
-    return this.props.composer?.thread?.model === "llm.thread";
+    return (
+      this.props.composer &&
+      this.props.composer.thread &&
+      this.props.composer.thread.model === "llm.thread"
+    );
   },
 
   /**
@@ -54,7 +58,8 @@ patch(Composer.prototype, {
 
   async sendMessage() {
     if (this.isLLMThread && this.llmStore) {
-      const content = this.props.composer.text?.trim();
+      const content =
+        this.props.composer.text && this.props.composer.text.trim();
       const attachments = this.props.composer.attachments || [];
       const attachmentIds = attachments.map((att) => att.id);
 
@@ -146,7 +151,11 @@ patch(Composer.prototype, {
    */
   get isDisabled() {
     if (this.isLLMThread) {
-      return this.isStreaming || !this.props.composer.text?.trim();
+      return (
+        this.isStreaming ||
+        !this.props.composer.text ||
+        !this.props.composer.text.trim()
+      );
     }
 
     // Use original disabled logic for regular mail
