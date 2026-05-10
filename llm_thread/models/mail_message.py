@@ -19,33 +19,69 @@ class MailMessage(models.Model):
 
     @api.model
     def _message_fetch(
-        self, domain, search_term=None, before=None, after=None, around=None, limit=30
+        self,
+        domain,
+        *,
+        thread=None,
+        search_term=None,
+        is_notification=None,
+        before=None,
+        after=None,
+        around=None,
+        limit=30,
     ):
         """Override to filter only LLM messages for llm.thread model.
 
-        For LLM threads, we only want to display messages that have an llm_role
-        (user, assistant, tool), not system notifications or other message types
-        that would clutter the AI conversation interface.
+        EN: For LLM threads, we only want to display messages that have an llm_role
+            (user, assistant, tool), not system notifications or other message types
+            that would clutter the AI conversation interface.
+            Signature updated for Odoo 19 compatibility (thread, is_notification params).
+
+        ES: Para hilos LLM, solo queremos mostrar mensajes que tengan un llm_role
+            (user, assistant, tool), no notificaciones del sistema u otros tipos de
+            mensaje que saturarían la interfaz de conversación de IA.
+            Firma actualizada para compatibilidad con Odoo 19 (parámetros thread, is_notification).
         """
         # Check if this is for an llm.thread model
-        is_llm_thread = any(
-            condition[0] == "model"
-            and condition[1] == "="
-            and condition[2] == "llm.thread"
-            for condition in domain
-            if isinstance(condition, (list, tuple)) and len(condition) == 3
-        )
+        # The thread object is available directly in Odoo 19
+        is_llm_thread = False
+        if thread and hasattr(thread, "_name") and thread._name == "llm.thread":
+            is_llm_thread = True
+        elif domain:
+            is_llm_thread = any(
+                condition[0] == "model"
+                and condition[1] == "="
+                and condition[2] == "llm.thread"
+                for condition in domain
+                if isinstance(condition, (list, tuple)) and len(condition) == 3
+            )
 
         if is_llm_thread:
             # Add LLM role filter for LLM threads - only show messages with llm_role
             llm_role_filter = [("llm_role", "!=", False)]
             domain = expression.AND([domain, llm_role_filter])
 
-        # Call parent method with modified domain
-        return super()._message_fetch(domain, search_term, before, after, around, limit)
+        # Call parent method with all Odoo 19 keyword arguments
+        return super()._message_fetch(
+            domain,
+            thread=thread,
+            search_term=search_term,
+            is_notification=is_notification,
+            before=before,
+            after=after,
+            around=around,
+            limit=limit,
+        )
 
     def _extras_to_store(self, store, format_reply):
-        """Add LLM-specific fields to the message store."""
+        """Add LLM-specific fields to the message store.
+
+        EN: Uses store.add_model_values() to inject custom LLM fields into
+            the mail.message store entries, compatible with Odoo 19 Store API.
+
+        ES: Usa store.add_model_values() para inyectar campos LLM personalizados
+            en las entradas del store de mail.message, compatible con la API Store de Odoo 19.
+        """
         super()._extras_to_store(store, format_reply)
 
         for message in self:
@@ -64,7 +100,8 @@ class MailMessage(models.Model):
                 data["body_json"] = message.body_json
 
             if data:  # Only add to store if we have data
-                store.add(message, data)
+                data["id"] = message.id
+                store.add_model_values("mail.message", data)
 
     def set_user_vote(self, vote_value):
         """Sets the user vote on this message, performing validation checks."""

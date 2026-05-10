@@ -228,15 +228,23 @@ class MailMessage(models.Model):
         return {message: message.llm_role == role for message in self}
 
     def to_store_format(self):
-        """Convert message to store format compatible with Odoo 18.0. Used by frontend js components"""
+        """Convert message to store format compatible with Odoo 19.
+
+        EN: Uses the standard Store.add() pattern which delegates to _to_store()
+            with properly normalized field defaults.
+
+        ES: Usa el patrón estándar Store.add() que delega a _to_store() con
+            valores por defecto de campos correctamente normalizados.
+        """
         self.ensure_one()
         from odoo.addons.mail.tools.discuss import Store
 
         store = Store()
-        self._to_store(store, None)
+        store.add(self)
         result = store.get_result()
 
-        return result["mail.message"][0]
+        messages = result.get("mail.message", [])
+        return messages[0] if messages else {}
 
     def _get_attachments_by_mimetype(self, mimetypes):
         """Get attachments filtered by mimetype.
