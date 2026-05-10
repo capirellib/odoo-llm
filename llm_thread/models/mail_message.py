@@ -58,6 +58,9 @@ class MailMessage(models.Model):
 
         if is_llm_thread:
             # Add LLM role filter for LLM threads - only show messages with llm_role
+            # Normalize domain: Odoo 19 controller may pass domain=None
+            if domain is None:
+                domain = []
             llm_role_filter = [("llm_role", "!=", False)]
             domain = expression.AND([domain, llm_role_filter])
 
