@@ -78,14 +78,27 @@ patch(llmStoreService, {
             return;
           }
 
-          // Reuse existing fetchData pattern to refresh thread data
-          await activeThread.fetchData([
-            "assistant_id",
-            "provider_id",
-            "model_id",
-            "tool_ids",
-            "prompt_id",
-          ]);
+          // Odoo 19: fetchData is not available on thread objects.
+          // Instead, read the updated fields via ORM and apply them manually.
+          const threadId = typeof activeThread.id === "string"
+            ? parseInt(activeThread.id.split(",").pop(), 10)
+            : activeThread.id;
+
+          const updated = await orm.read(
+            "llm.thread",
+            [threadId],
+            ["assistant_id", "provider_id", "model_id", "tool_ids", "prompt_id"]
+          );
+
+          if (updated && updated.length > 0) {
+            const data = updated[0];
+            // Update reactive thread properties
+            if (data.provider_id) activeThread.provider_id = data.provider_id;
+            if (data.model_id) activeThread.model_id = data.model_id;
+            if (data.assistant_id) activeThread.assistant_id = data.assistant_id;
+            if (data.tool_ids) activeThread.tool_ids = data.tool_ids;
+            if (data.prompt_id) activeThread.prompt_id = data.prompt_id;
+          }
         } catch (error) {
           console.error("Error selecting assistant:", error);
           notification.add("Failed to update assistant", { type: "danger" });

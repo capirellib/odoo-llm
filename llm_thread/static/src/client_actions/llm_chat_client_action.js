@@ -73,11 +73,12 @@ export class LLMChatClientAction extends Component {
   getActiveId(props) {
     const context = props.action && props.action.context;
     const params = props.action && props.action.params;
-    return (
+    const raw =
       (context && context.active_id) ||
       (params && params.active_id) ||
-      (context && context.default_active_id)
-    );
+      (context && context.default_active_id);
+    // Coerce to string - Odoo 19 URL params may pass numeric IDs
+    return raw != null ? String(raw) : null;
   }
 
   /**
