@@ -68,7 +68,8 @@ export class LLMChatContainer extends Component {
    * Check if we have an active LLM thread
    */
   get hasActiveThread() {
-    return this.activeThread && this.activeThread.model === "llm.thread";
+    const thread = this.activeThread;
+    return thread && (thread.model === "llm.thread" || thread.res_model === "llm.thread");
   }
 
   /**

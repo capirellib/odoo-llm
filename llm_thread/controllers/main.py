@@ -19,7 +19,10 @@ class LLMThreadController(http.Controller):
     )
     def llm_thread_update(self, thread_id, **kwargs):
         try:
-            thread = request.env["llm.thread"].browse(thread_id)
+            # Handle Odoo 19 composite IDs (e.g. "llm.thread,123")
+            if isinstance(thread_id, str) and "," in thread_id:
+                thread_id = thread_id.split(",")[-1]
+            thread = request.env["llm.thread"].browse(int(thread_id))
             if not thread.exists():
                 raise MissingError(_("LLM Thread not found."))
             thread.write(kwargs)
@@ -43,6 +46,9 @@ class LLMThreadController(http.Controller):
         """Generate LLM responses with streaming and safe yielding."""
         with Registry(dbname).cursor() as cr:
             env = api.Environment(cr, env.uid, env.context)
+            # Handle Odoo 19 composite IDs (e.g. "llm.thread,123")
+            if isinstance(thread_id, str) and "," in thread_id:
+                thread_id = thread_id.split(",")[-1]
             llm_thread = env["llm.thread"].browse(int(thread_id))
             if not llm_thread.exists():
                 yield from cls._safe_yield(

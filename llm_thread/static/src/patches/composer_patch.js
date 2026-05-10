@@ -30,11 +30,12 @@ patch(Composer.prototype, {
    * This is our safety check to ensure we only modify LLM-related behavior
    */
   get isLLMThread() {
-    return (
-      this.props.composer &&
-      this.props.composer.thread &&
-      this.props.composer.thread.model === "llm.thread"
-    );
+    const thread = this.props.composer && this.props.composer.thread;
+    if (!thread) {
+      return false;
+    }
+    // In Odoo 19, check both model and res_model as a fallback
+    return thread.model === "llm.thread" || thread.res_model === "llm.thread";
   },
 
   /**
@@ -57,21 +58,52 @@ patch(Composer.prototype, {
   },
 
   async sendMessage() {
-    if (this.isLLMThread && this.llmStore) {
-      const content =
-        this.props.composer.text && this.props.composer.text.trim();
-      const attachments = this.props.composer.attachments || [];
-      const attachmentIds = attachments.map((att) => att.id);
+    const composer = this.props.composer;
+    
+    // Exhaustive search for text in the composer object
+    const findText = (obj) => {
+      if (!obj) return "";
+      // Priority 1: Standard paths
+      if (typeof obj.text === "string") return obj.text;
+      if (typeof obj.textValue === "string") return obj.textValue;
+      if (obj.comment && typeof obj.comment.text === "string") return obj.comment.text;
+      
+      // Priority 2: Any string property containing 'text' in its name
+      for (const key in obj) {
+        if (key.toLowerCase().includes("text") && typeof obj[key] === "string") {
+          return obj[key];
+        }
+      }
+      
+      // Priority 3: Fallback to common Odoo properties
+      return obj.body || obj.comment?.body || "";
+    };
 
+    const rawContent = findText(composer);
+    const content = typeof rawContent === "string" ? rawContent.trim() : "";
+    const attachments = composer.attachments || [];
+    const attachmentIds = attachments.map((att) => att.id);
+
+    console.log("[LLM Composer] sendMessage called. isLLMThread:", this.isLLMThread);
+    console.log("[LLM Composer] Composer Keys:", Object.keys(composer).join(", "));
+    console.log("[LLM Composer] Detected Content:", content);
+
+    if (this.isLLMThread && this.llmStore) {
       if (!content && attachmentIds.length === 0) {
+        console.log("[LLM Composer] Empty content and no attachments, ignoring.");
         return;
       }
 
-      const threadId = this.props.composer.thread.id;
+      const threadId = composer.thread.id;
+      console.log("[LLM Composer] Sending message to thread:", threadId);
 
-      this.props.composer.clear();
-
-      await this.llmStore.sendLLMMessage(threadId, content, attachmentIds);
+      try {
+        // Clear composer FIRST to give immediate feedback
+        this.props.composer.clear();
+        await this.llmStore.sendLLMMessage(threadId, content, attachmentIds);
+      } catch (error) {
+        console.error("[LLM Composer] Error in sendMessage:", error);
+      }
       return;
     }
 

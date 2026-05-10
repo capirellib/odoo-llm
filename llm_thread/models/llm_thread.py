@@ -381,6 +381,9 @@ class LLMThread(models.Model):
                     "type": "message_create",
                     "message": last_message.to_store_format(),
                 }
+                # Explicitly commit to ensure the message is visible to other cursors
+                # especially since the client might do concurrent RPCs to fetch it
+                self.env.cr.commit()
 
                 # Check for unsupported attachments in the new message
                 if last_message.attachment_ids:

@@ -13,6 +13,26 @@ export const llmStoreService = {
   dependencies: ["orm", "mail.store", "notification"],
 
   start(env, { orm, "mail.store": mailStore, notification }) {
+    /**
+     * Helper to get all records from a mail.store collection in any Odoo version
+     * Handles .list(), .records (array/object), and direct iteration
+     */
+    const getCollectionRecords = (col) => {
+      if (!col) return [];
+      if (typeof col.list === "function") {
+        return col.list();
+      }
+      if (col.records) {
+        return Array.isArray(col.records)
+          ? col.records
+          : Object.values(col.records);
+      }
+      if (typeof col[Symbol.iterator] === "function") {
+        return [...col];
+      }
+      return [];
+    };
+
     const llmStore = reactive({
       // NOTE: Threads are now loaded via standard mail.store, no need for separate Map
       // Map<id, LLMModel>
@@ -35,7 +55,9 @@ export const llmStoreService = {
       get activeLLMThread() {
         // Check if current active thread in mail.store is an LLM thread
         const activeThread = mailStore.discuss && mailStore.discuss.thread;
-        return activeThread && activeThread.model === "llm.thread"
+        return activeThread &&
+          (activeThread.model === "llm.thread" ||
+            activeThread.res_model === "llm.thread")
           ? activeThread
           : null;
       },
@@ -45,19 +67,16 @@ export const llmStoreService = {
       },
 
       get llmThreadList() {
-        // Get all LLM threads from multiple possible collections in Odoo 19
-        const threadCol =
-          mailStore.Thread && mailStore.Thread.records
-            ? Object.values(mailStore.Thread.records)
-            : [];
-        const customCol =
-          mailStore["llm.thread"] && mailStore["llm.thread"].records
-            ? Object.values(mailStore["llm.thread"].records)
-            : [];
+        const allThreads = [
+          ...getCollectionRecords(mailStore.Thread),
+          ...getCollectionRecords(mailStore["llm.thread"]),
+        ];
 
-        const allThreads = [...threadCol, ...customCol];
         return allThreads
-          .filter((thread) => thread.model === "llm.thread")
+          .filter(
+            (thread) =>
+              thread.model === "llm.thread" || thread.res_model === "llm.thread"
+          )
           .sort((a, b) => {
             const dateA = new Date(a.write_date || 0);
             const dateB = new Date(b.write_date || 0);
@@ -66,37 +85,76 @@ export const llmStoreService = {
       },
 
       // LLM-specific methods using standard fetchData approach
-      async ensureThreadLoaded(threadId) {
-        // In Odoo 19, threads can be in mailStore.Thread or in a dynamic collection for the model
-        // We search both to be 100% sure we find the thread
-        const collections = ["Thread", "llm.thread"];
-        for (const colName of collections) {
-          const collection = mailStore[colName];
-          if (collection && collection.records) {
-            const allRecords = Object.values(collection.records);
-            const thread = allRecords.find(
-              (t) => t.id === threadId && (t.model === "llm.thread" || !t.model)
+      ensureThreadLoaded: async function (threadId) {
+        const findInStore = () => {
+          const collections = ["Thread", "llm.thread"];
+          for (const colName of collections) {
+            const collection = mailStore[colName];
+            if (!collection) continue;
+
+            // Try multiple ID formats: number, composite string, and plain string
+            let thread =
+              collection.get(threadId) ||
+              collection.get(`llm.thread,${threadId}`) ||
+              collection.get(String(threadId));
+
+            if (thread) return thread;
+
+            // Deep search fallback: check ID property of every record
+            const records = getCollectionRecords(collection);
+            thread = records.find(
+              (r) =>
+                r.id === threadId ||
+                r.id === `llm.thread,${threadId}` ||
+                String(r.id) === String(threadId)
             );
-            if (thread) {
-              return thread;
-            }
+
+            if (thread) return thread;
           }
+          return null;
+        };
+
+        // 1. Check local store
+        let thread = findInStore();
+        if (thread) return thread;
+
+        // 2. Not in store, fetch from server
+        console.log(`[LLM Store] Thread ${threadId} not in store, fetching...`);
+        try {
+          const storeData = await orm.call("llm.thread", "to_store_format", [
+            threadId,
+          ]);
+          if (storeData) {
+            console.log("[LLM Store] Fetch result:", storeData);
+            mailStore.insert(storeData);
+            // Wait a microtask for reactivity to settle
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            thread = findInStore();
+          }
+        } catch (error) {
+          console.error(`[LLM Store] Error fetching thread ${threadId}:`, error);
         }
-        return null;
+
+        if (!thread) {
+          console.error(`[LLM Store] Still could not find thread ${threadId} after fetch/insert`);
+        }
+        return thread;
       },
 
-      async sendLLMMessage(threadId, content, attachmentIds = []) {
+      sendLLMMessage: async function (threadId, content, attachmentIds = []) {
+        console.log("[LLM Store] sendLLMMessage called:", { threadId, contentLength: content?.length, attachmentIds });
         if (
           !threadId ||
           ((!content || !content.trim()) && attachmentIds.length === 0)
         ) {
+          console.warn("[LLM Store] Cannot send empty message or missing threadId");
           return;
         }
 
         try {
           await this.startLLMStreaming(threadId, content, attachmentIds);
         } catch (error) {
-          console.error("Error sending LLM message:", error);
+          console.error("[LLM Store] Error sending LLM message:", error);
           notification.add(
             _t(
               "Could not send your message. Please check your connection and try again."
@@ -106,7 +164,7 @@ export const llmStoreService = {
         }
       },
 
-      async startLLMStreaming(threadId, message, attachmentIds = []) {
+      startLLMStreaming: async function (threadId, message, attachmentIds = []) {
         this.stopStreaming(threadId);
 
         this.streamingThreads.add(threadId);
@@ -124,8 +182,13 @@ export const llmStoreService = {
           this.eventSources.set(threadId, eventSource);
 
           eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            this.handleStreamMessage(threadId, data);
+            try {
+              const data = JSON.parse(event.data);
+              console.log("[LLM Store] Received stream message:", data.type);
+              this.handleStreamMessage(threadId, data);
+            } catch (e) {
+              console.error("[LLM Store] Failed to parse stream data:", event.data, e);
+            }
           };
 
           eventSource.onerror = (error) => {
@@ -161,42 +224,48 @@ export const llmStoreService = {
         this.streamingThreads.delete(threadId);
       },
 
-      handleStreamMessage(threadId, data) {
+      handleStreamMessage: async function (threadId, data) {
+        /**
+         * Helper to wrap message data in the correct Odoo 19 Store format
+         * Store.insert() expects { ModelName: [records] }
+         */
+        const wrapMessage = (msg) => {
+          if (!msg) return {};
+          // If already wrapped in a model key (Odoo standard), return as is
+          if (msg["mail.message"] || msg.Message || msg.Thread) {
+            return msg;
+          }
+          // If it's a single message object, wrap it in mail.message (Odoo 19 standard)
+          return { "mail.message": [msg] };
+        };
+
         switch (data.type) {
           case "message_create": {
-            // Handle all messages (user and AI) via EventSource
-            mailStore.insert(
-              { "mail.message": [data.message] },
-              { html: true }
-            );
+            const wrapped = wrapMessage(data.message);
+            mailStore.insert(wrapped, { html: true });
 
-            // Get the created message and add it to the thread's messages collection
-            const createdMessage = mailStore.Message.get(data.message.id);
+            // Extract the message data for further processing
+            const msgData = wrapped["mail.message"] ? wrapped["mail.message"][0] : (wrapped.Message ? wrapped.Message[0] : null);
+            if (!msgData) break;
 
-            // Add message to the correct thread's messages collection (not the active thread)
-            const createThread = mailStore.Thread.get({
-              model: "llm.thread",
-              id: threadId,
-            });
-            if (
-              createThread &&
-              createdMessage &&
-              !createThread.messages.some((m) => m.id === createdMessage.id)
-            ) {
-              createThread.messages.push(createdMessage);
+            // In Odoo 19, use the collection mapped to the model name
+            const msgCollection = mailStore["mail.message"] || mailStore.Message;
+            const createdMessage = msgCollection ? msgCollection.get(msgData.id) : null;
+
+            // Add message to the correct thread's messages collection
+            const createThread = await this.ensureThreadLoaded(threadId);
+            if (createThread && createdMessage) {
+               if (!createThread.messages.some((m) => m.id === createdMessage.id)) {
+                 createThread.messages.push(createdMessage);
+               }
             }
             break;
           }
 
           case "message_chunk":
           case "message_update":
-            // Update existing message using standard mail.store.insert() like Odoo does
-            // Use the same pattern as Odoo's standard bus handlers - always use insert
-            // which will update existing messages or create new ones as needed
-            mailStore.insert(
-              { "mail.message": [data.message] },
-              { html: true }
-            );
+            // Update existing message using standard mail.store.insert()
+            mailStore.insert(wrapMessage(data.message), { html: true });
             break;
 
           case "error":
@@ -224,7 +293,7 @@ export const llmStoreService = {
         }
       },
 
-      async loadLLMModels() {
+      loadLLMModels: async function () {
         try {
           // Check if llm.model exists first - use correct field names
           const models = await orm.searchRead(
@@ -245,7 +314,7 @@ export const llmStoreService = {
         }
       },
 
-      async loadLLMProviders() {
+      loadLLMProviders: async function () {
         try {
           // Check if llm.provider exists first - use correct field names
           const providers = await orm.searchRead(
@@ -266,7 +335,7 @@ export const llmStoreService = {
         }
       },
 
-      async loadLLMTools() {
+      loadLLMTools: async function () {
         // Load available tools with minimal fields
         const tools = await orm.searchRead(
           "llm.tool",
@@ -280,7 +349,7 @@ export const llmStoreService = {
       },
 
       // Thread selection using standard Odoo patterns
-      async selectThread(threadId) {
+      selectThread: async function (threadId) {
         try {
           // Ensure thread is loaded using standard fetchData
           const thread = await this.ensureThreadLoaded(threadId);
@@ -302,7 +371,7 @@ export const llmStoreService = {
       },
 
       // Create new thread with default provider and model
-      async createNewThread({ recordModel, recordId } = {}) {
+      createNewThread: async function ({ recordModel, recordId } = {}) {
         // Get first available provider and model
         const firstProvider = this.getFirstAvailableProvider();
         const firstModel = this.getFirstAvailableModel();
@@ -362,7 +431,7 @@ export const llmStoreService = {
       },
 
       // Refresh threads and select specific thread
-      async refreshThreadsAndSelect(threadId) {
+      refreshThreadsAndSelect: async function (threadId) {
         // Fetch the newly created thread in store format compatible with Odoo 19
         const storeData = await orm.call("llm.thread", "to_store_format", [
           threadId,
@@ -489,7 +558,7 @@ export const llmStoreService = {
       },
 
       // Initialize LLM store - threads now loaded via standard init_messaging
-      async initialize() {
+      initialize: async function () {
         try {
           const loaders = this.getDataLoaders();
           await Promise.all(loaders.map((loader) => loader.call(this)));
