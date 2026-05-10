@@ -31,15 +31,17 @@ patch(Thread.prototype, {
    * @param {String} activeId - Active ID to set
    */
   _updateActionContext(activeId) {
+    var actionService = this.store.env && this.store.env.services && this.store.env.services.action;
     if (
       !this.store.action_discuss_id ||
-      !this.store.env.services.action.currentController.action
+      !actionService ||
+      !actionService.currentController ||
+      !actionService.currentController.action
     ) {
       return;
     }
 
-    const currentAction =
-      this.store.env.services.action.currentController.action;
+    var currentAction = actionService.currentController.action;
     if (currentAction.id !== this.store.action_discuss_id) {
       return;
     }
