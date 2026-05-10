@@ -700,32 +700,24 @@ class LLMThread(models.Model):
                 ]
 
             # Use mail.thread model for the store to ensure JS pick it up in Thread collection
-            store.add(thread, thread_data)
-
-    def _finalize_store(self, store):
-        """
-        EN: Finalize store data by remapping llm.thread to mail.thread for Odoo 19 JS.
-        ES: Finalizar los datos del almacén remapeando llm.thread a mail.thread para Odoo 19 JS.
-        """
-        result = store.get_result()
-        if "llm.thread" in result:
-            threads = result.pop("llm.thread")
-            if "mail.thread" not in result:
-                result["mail.thread"] = []
-            result["mail.thread"].extend(threads)
-        return result
+            store.add_model_values("mail.thread", thread_data)
 
     def to_store_format(self):
         """
         EN: Convert thread to store format compatible with Odoo 19.
+            Uses the standard Store.add(as_thread=True) pattern which delegates
+            to _thread_to_store() and handles composite keys automatically.
+
         ES: Convertir el hilo al formato de almacén compatible con Odoo 19.
+            Usa el patrón estándar Store.add(as_thread=True) que delega a
+            _thread_to_store() y maneja las claves compuestas automáticamente.
         """
         self.ensure_one()
         from odoo.addons.mail.tools.discuss import Store
 
         store = Store()
-        self._thread_to_store(store, None)
-        return self._finalize_store(store)
+        store.add(self, as_thread=True)
+        return store.get_result()
 
     @api.ondelete(at_uninstall=False)
     def _unlink_llm_thread(self):

@@ -195,7 +195,7 @@ class LLMThread(models.Model):
                 else False,
             }
             # Use mail.thread model for the store to ensure JS pick it up in Thread collection
-            store.add(thread, thread_data)
+            store.add_model_values("mail.thread", thread_data)
 
     def _extract_message_content(self, message):
         """
