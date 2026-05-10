@@ -85,12 +85,6 @@ export const llmStoreService = {
         return null;
       },
 
-        // If thread not found, it might not be accessible to current user
-        // or wasn't loaded in init_messaging (e.g., old thread, different user)
-        console.warn(`Thread ${threadId} not found in mailStore`);
-        return null;
-      },
-
       async sendLLMMessage(threadId, content, attachmentIds = []) {
         if (
           !threadId ||
